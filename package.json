@@ -1,5 +1,5 @@
 {
-  "name": "code",
+  "name": "csharp-debug-visualizer",
   "displayName": "C# Debug Visualizer",
   "description": "",
   "version": "0.0.1",
@@ -13,9 +13,16 @@
   "main": "./extension.js",
   "contributes": {
     "commands": [{
-      "command": "code.helloWorld",
-      "title": "Hello World"
-    }]
+      "command": "csharp-debug-visualizer.visualize",
+      "title": "Visualize"
+    }],
+    "menus": {
+      "editor/content": [{
+        "command": "csharp-debug-visualizer.visualize",
+        "group": "Visualize",
+        "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
+      }]
+    }
   },
   "scripts": {
     "lint": "eslint .",
