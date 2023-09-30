@@ -174,12 +174,16 @@ function getWebviewContent(selectedVariable, result, variableType) {
 				width: 100%;
 			}
 
+			.function-container {
+				width: 100%;
+				height: 40px;
+			}
+
 			button {
 				position: relative;
 				font-family: 'Roboto Mono', monospace;
 				float: right;
 				margin: 10px;
-				right: 0;
 				display: inline-block;
             	outline: 0;
             	cursor: pointer;
@@ -197,7 +201,13 @@ function getWebviewContent(selectedVariable, result, variableType) {
 			}
 
 			#btn-copyToClipBoard {
-				margin-right: 13px;
+				position: fixed;
+				right: 25px;
+			}
+
+			#btn-wordWrap {
+				position: fixed;
+				right: 80px;
 			}
 
 			button:hover {
@@ -321,24 +331,23 @@ function getWebviewContent(selectedVariable, result, variableType) {
 		</style>
 	</head>
 	<body>
-		<div id="main-container" class="main-container">
-			<div>`;
+		<div id="main-container" class="main-container">`
 
-				// Conditional functionalities
-				if (variableType != "System.Data.DataTable")
-				{
-					preWebContent = preWebContent + `
-					<button id="btn-copyToClipBoard" onclick="copyToClipBoard()">
-						<i class="fa-regular fa-clipboard" style="color: #ffffff;"></i>
-						<span class="tooltiptext">Copy To Clipboard</span>
-					</button>
-					<button id="btn-wordWrap" onclick="wordWrap()">
-						<i class="fa-solid fa-indent" style="color: #ffffff;"></i>
-						<span class="tooltiptext">Word Wrap</span>
-					</button>`;
-				}
-
-	preWebContent = preWebContent +`</div>`;
+	// Conditional functionalities
+	if (variableType != "System.Data.DataTable")
+	{
+		preWebContent = preWebContent + `
+			<div id="function-container" class="function-container">
+				<button id="btn-copyToClipBoard" onclick="copyToClipBoard()">
+					<i class="fa-regular fa-clipboard" style="color: #ffffff;"></i>
+					<span class="tooltiptext">Copy To Clipboard</span>
+				</button>
+				<button id="btn-wordWrap" onclick="wordWrap()">
+					<i class="fa-solid fa-indent" style="color: #ffffff;"></i>
+					<span class="tooltiptext">Word Wrap</span>
+				</button>
+			</div>`;
+	}
 
 	let resultWebContent = '';
 
@@ -383,7 +392,7 @@ function getWebviewContent(selectedVariable, result, variableType) {
 		case "System.Data.DataRow":
 			resultWebContent = `
 				<div id="result-container" class="result-container">
-					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]<code></p>
+					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]</code></p>
 				</div>
 			`;
 			break;
@@ -430,7 +439,7 @@ function getWebviewContent(selectedVariable, result, variableType) {
 			{
 				resultWebContent = `
 				<div id="result-container" class="result-container">
-					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]<code></p>
+					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]</code></p>
 				</div>
 				`;
 			}
