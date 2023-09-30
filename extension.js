@@ -175,6 +175,7 @@ function getWebviewContent(selectedVariable, result, variableType) {
 			}
 
 			button {
+				position: relative;
 				font-family: 'Roboto Mono', monospace;
 				float: right;
 				margin: 10px;
@@ -195,10 +196,47 @@ function getWebviewContent(selectedVariable, result, variableType) {
             	transition-property: color, background-color, border-color;
 			}
 
+			#btn-copyToClipBoard {
+				margin-right: 13px;
+			}
+
 			button:hover {
 				background-color: #383b45;
 				border-color: #1b1f2326;
 				transition-duration: 0.1s;
+			}
+			  
+			button .tooltiptext {
+				visibility: hidden;
+				width: 100px;
+				background-color: #383b45;
+				color: #fff;
+				text-align: center;
+				border-radius: 6px;
+				padding: 5px 0;
+				position: absolute;
+				z-index: 1;
+				top: 125%;
+				left: 50%;
+				margin-left: -50px;
+				opacity: 0;
+				transition: opacity 0.3s;
+			}
+			  
+			button .tooltiptext::after {
+				content: "";
+				position: absolute;
+				bottom: 100%;
+				left: 50%;
+				margin-left: -5px;
+				border-width: 5px;
+				border-style: solid;
+				border-color: transparent transparent #383b45 transparent;
+			}
+			  
+			button:hover .tooltiptext {
+				visibility: visible;
+				opacity: 1;
 			}
 
 			.popup {
@@ -290,11 +328,13 @@ function getWebviewContent(selectedVariable, result, variableType) {
 				if (variableType != "System.Data.DataTable")
 				{
 					preWebContent = preWebContent + `
-					<button id="btn-copyToClipBoard" class="btn-copyToClipBoard" onclick="copyToClipBoard()">
+					<button id="btn-copyToClipBoard" onclick="copyToClipBoard()">
 						<i class="fa-regular fa-clipboard" style="color: #ffffff;"></i>
+						<span class="tooltiptext">Copy To Clipboard</span>
 					</button>
-					<button id="btn-wordWrap" class="btn-wordWrap" onclick="wordWrap()">
+					<button id="btn-wordWrap" onclick="wordWrap()">
 						<i class="fa-solid fa-indent" style="color: #ffffff;"></i>
+						<span class="tooltiptext">Word Wrap</span>
 					</button>`;
 				}
 
