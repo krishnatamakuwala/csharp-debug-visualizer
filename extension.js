@@ -10,22 +10,523 @@ const vscode = require('vscode');
  */
 function activate(context) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "code" is now active!');
-
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('code.helloWorld', function () {
+	let disposable = vscode.commands.registerCommand('csharp-debug-visualizer.visualize', async function () {
 		// The code you place here will be executed every time your command is executed
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from C# Debug Visualizer!');
+		// Get access to editor
+		const editor = vscode.window.activeTextEditor;
+		if(!editor)
+		{
+			vscode.window.showInformationMessage("Editor does not exist");
+			return;
+		}
+
+		const selectedVariable = editor.document.getText(editor.selection);
+
+		try{
+			// Get Active Debug Session
+			const session = vscode.debug.activeDebugSession;
+
+			// Get Thread
+			const threadResponse = await session.customRequest('threads');
+			const threadId = threadResponse.threads[0].id;
+
+			// Get StackFrame
+			const stackResponse = await session.customRequest('stackTrace', { threadId: threadId, startFrame: 0 });
+			const frameId = stackResponse.stackFrames[0].id;
+
+			// Get Scope
+			const scopeResponse = await session.customRequest('scopes', { frameId: frameId });
+			const variableReference = scopeResponse.scopes[0].variablesReference;
+
+			// Get Variable
+			const variableResponse = await session.customRequest('variables', { variablesReference: variableReference });
+			const variables = variableResponse.variables;
+			
+			// Get type of variable
+			const variableTypeResponse = await session.customRequest('evaluate', { expression: `${selectedVariable}.GetType().FullName`, frameId: frameId });
+			const variableType = getCustomParsedString(variableTypeResponse.result);
+			
+			switch (variableType) {
+				case "System.Char":
+				case "System.String":
+				case "System.Int16":
+				case "System.Int32":
+				case "System.Int64":
+				case "System.UInt16":
+				case "System.UInt32":
+				case "System.UInt64":
+				case "System.Double":
+				case "System.Single":
+				case "System.Boolean":
+				case "System.Decimal":
+				case "System.Byte":
+				case "System.SByte":
+				case "System.Object":
+					var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
+					break;
+				case "System.Char[]":
+				case "System.String[]":
+				case "System.Int16[]":
+				case "System.Int32[]":
+				case "System.Int64[]":
+				case "System.UInt16[]":
+				case "System.UInt32[]":
+				case "System.UInt64[]":
+				case "System.Double[]":
+				case "System.Single[]":
+				case "System.Boolean[]":
+				case "System.Decimal[]":
+				case "System.Byte[]":
+				case "System.SByte[]":
+				case "System.Object[]":
+					var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+					var result = await session.customRequest('variables', { variablesReference: varRef });
+					result = result.variables.map(x => { return x.value });
+					result = result.toString();
+					break;
+				case "System.Data.DataColumn":
+					var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+					var dataColumnRes = await session.customRequest('variables', { variablesReference: varRef });
+					var result = dataColumnRes.variables.filter(x => x.name.includes('ColumnName'))[0].value;
+					break;
+				case "System.Data.DataRow":
+					var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+					var dataRowRes = await session.customRequest('variables', { variablesReference: varRef });
+					var rowsItemVariableRef = dataRowRes.variables.filter(x => x.name.includes('ItemArray'))[0].variablesReference;
+					var rowItemRes = await session.customRequest('variables', { variablesReference: rowsItemVariableRef });
+					var result = rowItemRes.variables.map(x => { return x.value });
+					result = result.toString();
+					break;
+				case "System.Data.DataTable":
+					var result = await getDataTableInformation(session, selectedVariable, variableResponse.variables.filter(x => x.evaluateName == selectedVariable));
+					break;
+				default:
+					if(variableType.includes("System.Collections.Generic.List"))
+					{
+						var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+						var result = await session.customRequest('variables', { variablesReference: varRef });
+						result = result.variables.filter(x => !x.name.includes('Raw View')).map(x => { return x.value });
+						result = result.toString();
+					}
+					else if(variableType.includes("AnonymousType"))
+					{
+						var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
+					}
+					else if(variableType.includes("Newtonsoft.Json.Linq.JObject"))
+					{
+						var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
+						result = getCustomParsedString(result);
+					}
+					else if(variableType.toLowerCase().includes("error".toLowerCase()))
+					{
+						var errorMessage = variableType;
+						throw new Error(errorMessage);
+					}
+					else
+					{
+						var result = "Oops...Not supported variable, still in development soooo...stay connected!!!";
+					}
+					break;
+			}
+
+			// Create web view panel to display result
+			const panel = vscode.window.createWebviewPanel(
+				'get-selected-text',
+				'Visualize',
+				vscode.ViewColumn.Two,
+				{
+					enableScripts: true
+				}
+			);
+			panel.webview.html = getWebviewContent(selectedVariable, result, variableType);
+		}
+		catch(error) {
+			vscode.window.showErrorMessage(error.message);
+		}
 	});
 
 	context.subscriptions.push(disposable);
 }
+
+// #region Get html for Web View
+function getWebviewContent(selectedVariable, result, variableType) {
+	let finalWebContent = '';
+	let preWebContent = `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+	  	<meta charset="UTF-8">
+	  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  	<title>Visualize</title>
+		<script src="https://kit.fontawesome.com/e23b471cdb.js" crossorigin="anonymous"></script>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Roboto+Mono&display=swap');
+			
+			.main-container {
+				display: flex;
+				flex-direction: column;
+				font-family: 'Roboto Mono', monospace;
+				height: auto;
+				width: 100%;
+			}
+
+			button {
+				font-family: 'Roboto Mono', monospace;
+				float: right;
+				margin: 10px;
+				right: 0;
+				display: inline-block;
+            	outline: 0;
+            	cursor: pointer;
+            	padding: 5px 16px;
+            	line-height: 20px;
+            	vertical-align: middle;
+            	border: 1px solid;
+            	border-radius: 6px;
+            	color: #fff;
+            	background-color: #454754;
+            	border-color: #1b1f2326;
+            	box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset;
+            	transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+            	transition-property: color, background-color, border-color;
+			}
+
+			button:hover {
+				background-color: #383b45;
+				border-color: #1b1f2326;
+				transition-duration: 0.1s;
+			}
+
+			.popup {
+				position: relative;
+				display: inline-block;
+				cursor: pointer;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+			}
+
+			.popup .popup-text {
+				visibility: hidden;
+				width: 160px;
+				background-color: #fff;
+				color: #555;
+				text-align: center;
+				border-radius: 6px;
+				padding: 8px 0;
+				position: absolute;
+				z-index: 1;
+				top: 90%;
+				left: 50%;
+				margin-left: -80px;
+			}
+
+			.popup .show {
+				visibility: visible;
+				-webkit-animation: fadeIn 0.5s;
+				animation: fadeIn 0.5s;
+			}
+
+			.popup .hide {
+				visibility: hidden;
+				-webkit-animation: fadeOut 0.5s;
+				animation: fadeOut 0.5s;
+			}
+
+			@-webkit-keyframes fadeIn {
+				from {opacity: 0;} 
+				to {opacity: 1;}
+			}
+
+			@keyframes fadeIn {
+				from {opacity: 0;}
+				to {opacity: 1;}
+			}
+
+			@-webkit-keyframes fadeOut {
+				from {opacity: 1;} 
+				to {opacity: 0;}
+			}
+
+			@keyframes fadeOut {
+				from {opacity: 1;}
+				to {opacity: 0;}
+			}
+
+			code, p {
+				font-family: 'Roboto Mono', monospace;
+				white-space: pre;
+			}
+
+			#datatable {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			  
+			#datatable td, #datatable th {
+				border: 1px solid #e6e6e6;
+				padding: 8px;
+			}
+			  
+			#datatable th {
+				padding-top: 12px;
+				padding-bottom: 12px;
+				text-align: left;
+				background-color: #454754;
+				color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="main-container" class="main-container">
+			<div>`;
+
+				// Conditional functionalities
+				if (variableType != "System.Data.DataTable")
+				{
+					preWebContent = preWebContent + `
+					<button id="btn-copyToClipBoard" class="btn-copyToClipBoard" onclick="copyToClipBoard()">
+						<i class="fa-regular fa-clipboard" style="color: #ffffff;"></i>
+					</button>
+					<button id="btn-wordWrap" class="btn-wordWrap" onclick="wordWrap()">
+						<i class="fa-solid fa-indent" style="color: #ffffff;"></i>
+					</button>`;
+				}
+
+	preWebContent = preWebContent +`</div>`;
+
+	let resultWebContent = '';
+
+	switch (variableType) {
+		case "System.Char":
+		case "System.String":
+		case "System.Int16":
+		case "System.Int32":
+		case "System.Int64":
+		case "System.UInt16":
+		case "System.UInt32":
+		case "System.UInt64":
+		case "System.Double":
+		case "System.Single":
+		case "System.Boolean":
+		case "System.Decimal":
+		case "System.Byte":
+		case "System.SByte":
+		case "System.Object":
+		case "System.Data.DataColumn":
+			resultWebContent = `
+				<div id="result-container" class="result-container">
+					<p>${selectedVariable} : <code>${result}</code></p>
+				</div>
+			`;
+			break;
+		case "System.Char[]":
+		case "System.String[]":
+		case "System.Int16[]":
+		case "System.Int32[]":
+		case "System.Int64[]":
+		case "System.UInt16[]":
+		case "System.UInt32[]":
+		case "System.UInt64[]":
+		case "System.Double[]":
+		case "System.Single[]":
+		case "System.Boolean[]":
+		case "System.Decimal[]":
+		case "System.Byte[]":
+		case "System.SByte[]":
+		case "System.Object[]":
+		case "System.Data.DataRow":
+			resultWebContent = `
+				<div id="result-container" class="result-container">
+					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]<code></p>
+				</div>
+			`;
+			break;
+		case "System.Data.DataTable":
+			resultWebContent = `
+				<div>
+					<h3>Variable Name : ${selectedVariable}</h3>
+					<p>Column Count : ${result.Columns.Count}</p>
+					<p>Row Count : ${result.Rows.Count}</p>
+					<table id="datatable">
+						<thead>
+							<tr>
+								<th>Sr. No.</th>`;
+			result.Columns.List.forEach(column => {
+				let columnString = '<th>' + getCustomParsedString(column) + '</th>';
+				resultWebContent += columnString;
+			});
+			resultWebContent += `
+							</tr>
+						</thead>
+						<tbody>
+			`;
+
+			let i = 1;
+			result.Rows.List.forEach(row => {
+				resultWebContent += '<tr>';
+				resultWebContent += `<td>${i}.</td>`;
+				row.forEach(rowData => {
+					let rowDataString = '<td>' + getCustomParsedString(rowData) + '</td>';
+					resultWebContent += rowDataString;
+				});
+				resultWebContent += '</tr>';
+				i++;
+			});
+
+			resultWebContent += `
+						</tbody>
+					</table>
+				</div>
+			`
+			break;
+		default:
+			if(variableType.includes("System.Collections.Generic.List"))
+			{
+				resultWebContent = `
+				<div id="result-container" class="result-container">
+					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]<code></p>
+				</div>
+				`;
+			}
+			else if(variableType.includes("AnonymousType") || variableType.includes("Newtonsoft.Json.Linq.JObject"))
+			{
+				resultWebContent = `
+				<div id="result-container" class="result-container">
+					<p>${selectedVariable} : <code>${result}</code></p>
+				</div>
+				`;
+			}
+			else
+			{
+				resultWebContent = `
+				<div id="result-container" class="result-container">
+					<p>${result}</p>
+				</div>
+				`;
+			}
+			break;
+	}
+
+	let messageWebContent = `
+			<div class="popup">
+				<span class="popup-text" id="popup-copyToClipBoard">Copied</span>
+			</div>
+		</div>
+		`;
+		
+	let scriptWebContent = `
+		<script>
+			let wrapState = 'off';
+
+			function copyToClipBoard()
+			{
+				var result = document.getElementsByTagName("code")[0].innerHTML;
+				var popup = document.getElementById("popup-copyToClipBoard");
+				var delayInMilliseconds = 2000;
+
+				navigator.clipboard.writeText(result);
+
+				popup.classList.remove("hide");
+				popup.classList.add("show");
+
+				setTimeout(function() {
+					popup.classList.remove("add");
+					popup.classList.add("hide");
+				}, delayInMilliseconds);
+			}
+
+			function wordWrap()
+			{
+				var element = document.getElementsByTagName("code")[0];
+				if(wrapState == 'off')
+				{
+					element.style.whiteSpace = 'pre-wrap';
+                    wrapState = 'on';
+				}
+				else
+				{
+					element.style.whiteSpace = 'pre';
+                    wrapState = 'off';
+				}
+			}
+		</script>
+	`;
+
+	let postWebContent = `
+	</body>
+	</html>`;
+
+	finalWebContent = preWebContent + resultWebContent + messageWebContent + scriptWebContent + postWebContent;
+
+	return finalWebContent;
+}
+// #endregion
+
+// #region Common methods or functions
+// Get Datatable information
+async function getDataTableInformation(session, selectedVariable, variable)
+{
+	try
+	{
+		const res = {};
+		res.name = selectedVariable;
+
+		const dtRef = variable[0].variablesReference;
+		const resForDt = await session.customRequest('variables', { variablesReference: dtRef });
+
+		res.Columns = {};
+		const columnRef = resForDt.variables.filter(x => x.evaluateName == 'dataTable.Columns')[0].variablesReference;
+		const resForColumn = await session.customRequest('variables', { variablesReference: columnRef });
+		res.Columns.Count = resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.Count')[0].value;
+		const resForColumnList = await session.customRequest('variables', { variablesReference: resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.List')[0].variablesReference });
+		res.Columns.List = resForColumnList.variables.filter(x => x.name != 'Raw View').map(x => { return x.value });
+
+		res.Rows = {};
+		const rowRef = resForDt.variables.filter(x => x.evaluateName == 'dataTable.Rows')[0].variablesReference;
+		const resForRow = await session.customRequest('variables', { variablesReference: rowRef });
+		res.Rows.Count = resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows.Count')[0].value;
+		const resForRowList = await session.customRequest('variables', { variablesReference: resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows, results')[0].variablesReference });
+
+		var rows = [];
+
+		await Promise.all(resForRowList.variables.map(async (rowVariable) => {
+			var row = await session.customRequest('variables', { variablesReference: rowVariable.variablesReference });
+			rows.push(row);
+		}));
+
+		const rowsItemVariableRef = rows.map(row => { return row.variables }).map(row => { return row.filter(x => x.name.includes('ItemArray'))[0].variablesReference });
+
+		var rowItemArray = [];
+
+		await Promise.all(rowsItemVariableRef.map(async (rowItem) => {
+			var rowItem = await session.customRequest('variables', { variablesReference: rowItem });
+			rowItemArray.push(rowItem);
+		}));
+
+		res.Rows.List = rowItemArray.map(row => { return row.variables.map(rowItem => { return rowItem.value }) });
+
+		return res;
+	}
+	catch(error) {
+		return error;
+	}
+}
+
+// Get custom parsed string
+function getCustomParsedString(str) {
+	if((str.startsWith("{") && str.endsWith("}")) || (str.startsWith("\"") && str.endsWith("\"")))
+	{
+		str = str.slice(1, -1);
+	}
+	return str;
+}
+// #endregion
 
 // This method is called when your extension is deactivated
 function deactivate() {}

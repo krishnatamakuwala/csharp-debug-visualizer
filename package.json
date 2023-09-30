@@ -17,9 +17,9 @@
       "title": "Visualize"
     }],
     "menus": {
-      "editor/content": [{
+      "editor/context": [{
         "command": "csharp-debug-visualizer.visualize",
-        "group": "Visualize",
+        "group": "visualize",
         "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
       }]
     }
