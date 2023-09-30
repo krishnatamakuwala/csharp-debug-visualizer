@@ -185,19 +185,19 @@ function getWebviewContent(selectedVariable, result, variableType) {
 				float: right;
 				margin: 10px;
 				display: inline-block;
-            	outline: 0;
-            	cursor: pointer;
-            	padding: 5px 16px;
-            	line-height: 20px;
-            	vertical-align: middle;
-            	border: 1px solid;
-            	border-radius: 6px;
-            	color: #fff;
-            	background-color: #454754;
-            	border-color: #1b1f2326;
-            	box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset;
-            	transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
-            	transition-property: color, background-color, border-color;
+				outline: 0;
+				cursor: pointer;
+				padding: 5px 16px;
+				line-height: 20px;
+				vertical-align: middle;
+				border: 1px solid;
+				border-radius: 6px;
+				color: #fff;
+				background-color: #454754;
+				border-color: #1b1f2326;
+				box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset;
+				transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+				transition-property: color, background-color, border-color;
 			}
 
 			#btn-copyToClipBoard {
