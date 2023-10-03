@@ -24,7 +24,7 @@ function activate(context) {
 			return;
 		}
 
-		const selectedVariable = editor.document.getText(editor.selection);
+		const selectedVariable = getSelectedVariable(editor);
 
 		try{
 			// Get Active Debug Session
@@ -135,7 +135,7 @@ function activate(context) {
 
 			// Create web view panel to display result
 			const panel = vscode.window.createWebviewPanel(
-				'get-selected-text',
+				'csharp-debug-visualizer',
 				'Visualize',
 				vscode.ViewColumn.Two,
 				{
@@ -472,7 +472,7 @@ function getWebviewContent(selectedVariable, result, variableType) {
 			{
 				resultWebContent = `
 				<div id="result-container" class="result-container">
-					<p>${result}</p>
+					<p><code style="color: #9fa6b2;">${result}</code></p>
 				</div>
 				`;
 			}
@@ -537,8 +537,6 @@ function getWebviewContent(selectedVariable, result, variableType) {
 			`
 		});
 
-		console.log(scriptWebContent);
-
 		scriptWebContent +=	`
 				// Download the CSV file
 				let anchor = document.createElement('a');
@@ -580,6 +578,36 @@ function getWebviewContent(selectedVariable, result, variableType) {
 // #endregion
 
 // #region Common methods or functions
+// Get selected variable based on cursor position
+function getSelectedVariable(editor)
+{
+	const cursorPosition = editor.selection.active;
+	var charPosition = cursorPosition.character - 1;
+	var previousCharacter = null;
+	var startCursorPosition = cursorPosition.character;
+	var nextCharacter = null;
+	var endCursorPosition = cursorPosition.character;
+	var charBreakArray = ['', ' ', '=', '(', ')', '{', '}', '[', ']', '.', ',', ';', '+', '-', '*', '/', '\\', '!', '`', '@', '#', '$', '~', '%', '^', '&', ':', '<', '>', '?', '|', '"', '\''];
+	while(!charBreakArray.includes(previousCharacter))
+	{
+		previousCharacter = editor.document.getText(new vscode.Range(cursorPosition.line, charPosition, cursorPosition.line, charPosition + 1));
+		if(charBreakArray.includes(previousCharacter))
+			break;
+		startCursorPosition = charPosition;
+		charPosition--;
+	}
+	var charPosition = cursorPosition.character + 1;
+	while(!charBreakArray.includes(nextCharacter))
+	{
+		nextCharacter = editor.document.getText(new vscode.Range(cursorPosition.line, charPosition, cursorPosition.line, charPosition - 1));
+		if(charBreakArray.includes(nextCharacter))
+			break;
+		endCursorPosition = charPosition;
+		charPosition++;
+	}
+	return editor.document.getText(new vscode.Range(cursorPosition.line, startCursorPosition, cursorPosition.line, endCursorPosition));
+}
+
 // Get Datatable information
 async function getDataTableInformation(session, selectedVariable, variable)
 {
