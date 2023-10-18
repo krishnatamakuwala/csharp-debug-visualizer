@@ -213,53 +213,29 @@ function getWebViewContent(selectedVariable, result, variableType) {
 
 	let resultWebContent = '';
 
-	switch (variableType) {
-		case "System.Char":
-		case "System.String":
-		case "System.Int16":
-		case "System.Int32":
-		case "System.Int64":
-		case "System.UInt16":
-		case "System.UInt32":
-		case "System.UInt64":
-		case "System.Double":
-		case "System.Single":
-		case "System.Boolean":
-		case "System.Decimal":
-		case "System.Byte":
-		case "System.SByte":
-		case "System.Object":
-		case "System.Data.DataColumn":
-			resultWebContent = `
+	const singleVariableType = ["System.Char", "System.String", "System.Int16", "System.Int32", "System.Int64", "System.UInt16", "System.UInt32", "System.UInt64", "System.Double", "System.Single", "System.Boolean", "System.Decimal", "System.Byte", "System.SByte", "System.Object", "System.Data.DataColumn", "System.Text.StringBuilder"];
+
+	const arrayVariableType = ["System.Char[]", "System.String[]", "System.Int16[]", "System.Int32[]", "System.Int64[]", "System.UInt16[]", "System.UInt32[]", "System.UInt64[]", "System.Double[]", "System.Single[]", "System.Boolean[]", "System.Decimal[]", "System.Byte[]", "System.SByte[]", "System.Object[]", "System.Data.DataRow", "System.Text.StringBuilder[]"];
+
+	if(singleVariableType.includes(variableType))
+	{
+		resultWebContent = `
 				<div id="result-container" class="result-container">
 					<p>${selectedVariable} : <code>${result}</code></p>
 				</div>
-			`;
-			break;
-		case "System.Char[]":
-		case "System.String[]":
-		case "System.Int16[]":
-		case "System.Int32[]":
-		case "System.Int64[]":
-		case "System.UInt16[]":
-		case "System.UInt32[]":
-		case "System.UInt64[]":
-		case "System.Double[]":
-		case "System.Single[]":
-		case "System.Boolean[]":
-		case "System.Decimal[]":
-		case "System.Byte[]":
-		case "System.SByte[]":
-		case "System.Object[]":
-		case "System.Data.DataRow":
-			resultWebContent = `
+		`;
+	}
+	else if(arrayVariableType.includes(variableType))
+	{
+		resultWebContent = `
 				<div id="result-container" class="result-container">
 					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]</code></p>
 				</div>
-			`;
-			break;
-		case "System.Data.DataTable":
-			resultWebContent = `
+		`;
+	}
+	else if(variableType == "System.Data.DataTable")
+	{
+		resultWebContent = `
 				<div>
 					<h3>Variable Name : ${selectedVariable}</h3>
 					<p>Column Count : ${result.Columns.Count}</p>
@@ -268,62 +244,62 @@ function getWebViewContent(selectedVariable, result, variableType) {
 						<thead>
 							<tr>
 								<th>Sr. No.</th>`;
-			result.Columns.List.forEach(column => {
-				let columnString = '<th>' + utilities.getCustomParsedString(column) + '</th>';
-				resultWebContent += columnString;
-			});
-			resultWebContent += `
+		result.Columns.List.forEach(column => {
+			let columnString = '<th>' + utilities.getCustomParsedString(column) + '</th>';
+			resultWebContent += columnString;
+		});
+		resultWebContent += `
 							</tr>
 						</thead>
 						<tbody>
-			`;
+		`;
 
-			let i = 1;
-			result.Rows.List.forEach(row => {
-				resultWebContent += '<tr>';
-				resultWebContent += `<td>${i}.</td>`;
-				row.forEach(rowData => {
-					let rowDataString = '<td>' + utilities.getCustomParsedString(rowData) + '</td>';
-					resultWebContent += rowDataString;
-				});
-				resultWebContent += '</tr>';
-				i++;
+		let i = 1;
+		result.Rows.List.forEach(row => {
+			resultWebContent += '<tr>';
+			resultWebContent += `<td>${i}.</td>`;
+			row.forEach(rowData => {
+				let rowDataString = '<td>' + utilities.getCustomParsedString(rowData) + '</td>';
+				resultWebContent += rowDataString;
 			});
+			resultWebContent += '</tr>';
+			i++;
+		});
 
-			resultWebContent += `
+		resultWebContent += `
 						</tbody>
 					</table>
 					</br></br>
 					<i>> Note: Sr. No. is a Serial Number and it is not included in datatable. It is only provided for better readability!</i>
 				</div>
-			`
-			break;
-		default:
-			if(variableType.includes("System.Collections.Generic.List"))
-			{
-				resultWebContent = `
+		`
+	}
+	else
+	{
+		if(variableType.includes("System.Collections.Generic.List"))
+		{
+			resultWebContent = `
 				<div id="result-container" class="result-container">
 					<p>${selectedVariable} : <code>[ ${result.replace(/,/g, ", ")} ]</code></p>
 				</div>
-				`;
-			}
-			else if(variableType.includes("AnonymousType") || variableType.includes("Newtonsoft.Json.Linq.JObject"))
-			{
-				resultWebContent = `
+			`;
+		}
+		else if(variableType.includes("AnonymousType") || variableType.includes("Newtonsoft.Json.Linq.JObject"))
+		{
+			resultWebContent = `
 				<div id="result-container" class="result-container">
 					<p>${selectedVariable} : <code>${result}</code></p>
 				</div>
-				`;
-			}
-			else
-			{
-				resultWebContent = `
+			`;
+		}
+		else
+		{
+			resultWebContent = `
 				<div id="result-container" class="result-container">
 					<p><code style="color: #9fa6b2;">${result}</code></p>
 				</div>
-				`;
-			}
-			break;
+			`;
+		}
 	}
 
 	let messageWebContent = `
