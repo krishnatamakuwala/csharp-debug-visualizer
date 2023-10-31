@@ -1,3 +1,4 @@
+// Get custom parsed string
 function getCustomParsedString(str) {
 	if((str.startsWith("{") && str.endsWith("}")) || (str.startsWith("\"") && str.endsWith("\"")))
 	{
