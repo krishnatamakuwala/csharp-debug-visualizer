@@ -57,13 +57,13 @@ function activate(context) {
 			const variableTypeResponse = await session.customRequest('evaluate', { expression: `${selectedVariable}.GetType().FullName`, frameId: frameId });
 			const variableType = utilities.getCustomParsedString(variableTypeResponse.result);
 
-			vscode.window.showInformationMessage("Visualising...");
+			vscode.window.showInformationMessage("Visualizing...");
 
 			var result = await getResult(session, variableResponse, variables, variableType, selectedVariable, currentPage);
 			currentPage = result.currentPage;
 			totalPage = result.totalPage;
 
-			vscode.window.showInformationMessage("Visualised");
+			vscode.window.showInformationMessage("Visualized");
 
 			// Create web view panel to display result
 			const panel = vscode.window.createWebviewPanel(
