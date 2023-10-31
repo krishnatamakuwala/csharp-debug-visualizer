@@ -4,6 +4,8 @@ const vscode = require('vscode');
 const webViewContent = require('./scripts/webViewContent');
 const utilities = require('./scripts/utilities');
 
+const recordPerPage = 25;
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 
@@ -28,7 +30,10 @@ function activate(context) {
 
 		const selectedVariable = getSelectedVariable(editor);
 
-		try{
+		var currentPage = 1;
+		var totalPage = 1;
+
+		try {
 			// Get Active Debug Session
 			const session = vscode.debug.activeDebugSession;
 
@@ -52,69 +57,10 @@ function activate(context) {
 			const variableTypeResponse = await session.customRequest('evaluate', { expression: `${selectedVariable}.GetType().FullName`, frameId: frameId });
 			const variableType = utilities.getCustomParsedString(variableTypeResponse.result);
 
-			const singleVariableType = ["System.Char", "System.String", "System.Int16", "System.Int32", "System.Int64", "System.UInt16", "System.UInt32", "System.UInt64", "System.Double", "System.Single", "System.Boolean", "System.Decimal", "System.Byte", "System.SByte", "System.Object", "System.Text.StringBuilder"];
+			var result = await getResult(session, variableResponse, variables, variableType, selectedVariable, currentPage);
 
-			const arrayVariableType = ["System.Char[]", "System.String[]", "System.Int16[]", "System.Int32[]", "System.Int64[]", "System.UInt16[]", "System.UInt32[]", "System.UInt64[]", "System.Double[]", "System.Single[]", "System.Boolean[]", "System.Decimal[]", "System.Byte[]", "System.SByte[]", "System.Object[]", "System.Text.StringBuilder[]"];
-			
-			// Process result for different datatypes
-			if (singleVariableType.includes(variableType))
-			{
-				var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
-			}
-			else if (arrayVariableType.includes(variableType))
-			{
-				var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
-				var result = await session.customRequest('variables', { variablesReference: varRef });
-				result = result.variables.map(x => { return x.value });
-				result = result.toString();
-			}
-			else if (variableType == "System.Data.DataColumn")
-			{
-				var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
-				var dataColumnRes = await session.customRequest('variables', { variablesReference: varRef });
-				var result = dataColumnRes.variables.filter(x => x.name.includes('ColumnName'))[0].value;
-			}
-			else if (variableType == "System.Data.DataRow")
-			{
-				var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
-				var dataRowRes = await session.customRequest('variables', { variablesReference: varRef });
-				var rowsItemVariableRef = dataRowRes.variables.filter(x => x.name.includes('ItemArray'))[0].variablesReference;
-				var rowItemRes = await session.customRequest('variables', { variablesReference: rowsItemVariableRef });
-				var result = rowItemRes.variables.map(x => { return x.value });
-				result = result.toString();
-			}
-			else if (variableType == "System.Data.DataTable")
-			{
-				var result = await getDataTableInformation(session, selectedVariable, variableResponse.variables.filter(x => x.evaluateName == selectedVariable));
-			}
-			else
-			{
-				if(variableType.includes("System.Collections.Generic.List"))
-				{
-					var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
-					var result = await session.customRequest('variables', { variablesReference: varRef });
-					result = result.variables.filter(x => !x.name.includes('Raw View')).map(x => { return x.value });
-					result = result.toString();
-				}
-				else if(variableType.includes("AnonymousType"))
-				{
-					var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
-				}
-				else if(variableType.includes("Newtonsoft.Json.Linq.JObject"))
-				{
-					var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
-					result = utilities.getCustomParsedString(result);
-				}
-				else if(variableType.toLowerCase().includes("error".toLowerCase()))
-				{
-					var errorMessage = variableType;
-					throw new Error(errorMessage);
-				}
-				else
-				{
-					var result = "Oops...Not supported variable, still in development!!!";
-				}
-			}
+			currentPage = result.currentPage;
+			totalPage = result.totalPage;
 
 			// Create web view panel to display result
 			const panel = vscode.window.createWebviewPanel(
@@ -126,7 +72,19 @@ function activate(context) {
 					enableFindWidget: true
 				}
 			);
-			panel.webview.html = webViewContent.getWebViewContent(selectedVariable, result, variableType);
+			panel.webview.html = webViewContent.getWebViewContent(selectedVariable, result, variableType, currentPage, totalPage);
+			panel.webview.onDidReceiveMessage(
+				message => {
+				  switch (message.command) {
+					case 'getPaginatedData':
+					  currentPage = parseInt(message.text);
+					  updateWebView(panel, session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage);
+					  return;
+				  }
+				},
+				undefined,
+				context.subscriptions
+			  );
 		}
 		catch(error) {
 			vscode.window.showErrorMessage(error.message);
@@ -137,6 +95,85 @@ function activate(context) {
 }
 
 // #region Common methods or functions
+
+// Update Webview
+async function updateWebView(panel, session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage)
+{
+	var result = await getResult(session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage);
+	panel.webview.html = webViewContent.getWebViewContent(selectedVariable, result, variableType, currentPage, totalPage);
+}
+
+// Get result for selected variable
+async function getResult(session, variableResponse, variables, variableType, selectedVariable, currentPage)
+{
+	const singleVariableType = ["System.Char", "System.String", "System.Int16", "System.Int32", "System.Int64", "System.UInt16", "System.UInt32", "System.UInt64", "System.Double", "System.Single", "System.Boolean", "System.Decimal", "System.Byte", "System.SByte", "System.Object", "System.Text.StringBuilder"];
+
+	const arrayVariableType = ["System.Char[]", "System.String[]", "System.Int16[]", "System.Int32[]", "System.Int64[]", "System.UInt16[]", "System.UInt32[]", "System.UInt64[]", "System.Double[]", "System.Single[]", "System.Boolean[]", "System.Decimal[]", "System.Byte[]", "System.SByte[]", "System.Object[]", "System.Text.StringBuilder[]"];
+	
+	// Process result for different datatypes
+	if (singleVariableType.includes(variableType))
+	{
+		var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
+	}
+	else if (arrayVariableType.includes(variableType))
+	{
+		var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+		var result = await session.customRequest('variables', { variablesReference: varRef });
+		result = await getMoreDataIfAny(session, result);
+		result = result.variables.map(x => { return x.value });
+		result = result.toString();
+	}
+	else if (variableType == "System.Data.DataColumn")
+	{
+		var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+		var dataColumnRes = await session.customRequest('variables', { variablesReference: varRef });
+		dataColumnRes = await getMoreDataIfAny(session, dataColumnRes);
+		var result = dataColumnRes.variables.filter(x => x.name.includes('ColumnName'))[0].value;
+	}
+	else if (variableType == "System.Data.DataRow")
+	{
+		var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+		var dataRowRes = await session.customRequest('variables', { variablesReference: varRef });
+		var rowsItemVariableRef = dataRowRes.variables.filter(x => x.name.includes('ItemArray'))[0].variablesReference;
+		var rowItemRes = await session.customRequest('variables', { variablesReference: rowsItemVariableRef });
+		var result = rowItemRes.variables.map(x => { return x.value });
+		result = result.toString();
+	}
+	else if (variableType == "System.Data.DataTable")
+	{
+		var result = await getDataTableInformation(session, selectedVariable, variableResponse.variables.filter(x => x.evaluateName == selectedVariable), currentPage);
+	}
+	else
+	{
+		if(variableType.includes("System.Collections.Generic.List"))
+		{
+			var varRef = variables.filter(x => x.evaluateName == selectedVariable)[0].variablesReference;
+			var result = await session.customRequest('variables', { variablesReference: varRef });
+			result = result.variables.filter(x => !x.name.includes('Raw View')).map(x => { return x.value });
+			result = result.toString();
+		}
+		else if(variableType.includes("AnonymousType"))
+		{
+			var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
+		}
+		else if(variableType.includes("Newtonsoft.Json.Linq.JObject"))
+		{
+			var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
+			result = utilities.getCustomParsedString(result);
+		}
+		else if(variableType.toLowerCase().includes("error".toLowerCase()))
+		{
+			var errorMessage = variableType;
+			throw new Error(errorMessage);
+		}
+		else
+		{
+			var result = "Oops...Not supported variable, still in development!!!";
+		}
+	}
+	return result;
+}
+
 // Get selected variable based on cursor position
 function getSelectedVariable(editor)
 {
@@ -164,56 +201,134 @@ function getSelectedVariable(editor)
 		endCursorPosition = charPosition;
 		charPosition++;
 	}
+
 	return editor.document.getText(new vscode.Range(cursorPosition.line, startCursorPosition, cursorPosition.line, endCursorPosition));
+
 }
 
 // Get Datatable information
-async function getDataTableInformation(session, selectedVariable, variable)
+async function getDataTableInformation(session, selectedVariable, variable, currentPage)
 {
 	try
 	{
-		const res = {};
+		var res = {};
 		res.name = selectedVariable;
 
 		const dtRef = variable[0].variablesReference;
 		const resForDt = await session.customRequest('variables', { variablesReference: dtRef });
 
-		res.Columns = {};
-		const columnRef = resForDt.variables.filter(x => x.evaluateName == 'dataTable.Columns')[0].variablesReference;
-		const resForColumn = await session.customRequest('variables', { variablesReference: columnRef });
-		res.Columns.Count = resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.Count')[0].value;
-		const resForColumnList = await session.customRequest('variables', { variablesReference: resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.List')[0].variablesReference });
-		res.Columns.List = resForColumnList.variables.filter(x => x.name != 'Raw View').map(x => { return x.value });
+		var columnResult = await getColumnsOfDataTable(session, res, resForDt);
+		var rowResult = await getRowsOfDataTable(session, res, resForDt, recordPerPage, currentPage);
 
-		res.Rows = {};
-		const rowRef = resForDt.variables.filter(x => x.evaluateName == 'dataTable.Rows')[0].variablesReference;
-		const resForRow = await session.customRequest('variables', { variablesReference: rowRef });
-		res.Rows.Count = resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows.Count')[0].value;
-		const resForRowList = await session.customRequest('variables', { variablesReference: resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows, results')[0].variablesReference });
-
-		var rows = [];
-
-		await Promise.all(resForRowList.variables.map(async (rowVariable) => {
-			var row = await session.customRequest('variables', { variablesReference: rowVariable.variablesReference });
-			rows.push(row);
-		}));
-
-		const rowsItemVariableRef = rows.map(row => { return row.variables }).map(row => { return row.filter(x => x.name.includes('ItemArray'))[0].variablesReference });
-
-		var rowItemArray = [];
-
-		await Promise.all(rowsItemVariableRef.map(async (rowItem) => {
-			var rowItem = await session.customRequest('variables', { variablesReference: rowItem });
-			rowItemArray.push(rowItem);
-		}));
-
-		res.Rows.List = rowItemArray.map(row => { return row.variables.map(rowItem => { return rowItem.value }) });
-
+		res.Columns = columnResult.Columns;
+		res.Rows = rowResult.Rows;
+		res.currentPage = currentPage;
+		res.totalPage = rowResult.totalPage;
 		return res;
 	}
 	catch(error) {
 		return error;
 	}
+}
+
+// Get columns from data table
+async function getColumnsOfDataTable(session, res, dataTable)
+{
+	res.Columns = {};
+
+	const columnRef = dataTable.variables.filter(x => x.evaluateName == 'dataTable.Columns')[0].variablesReference;
+	const resForColumn = await session.customRequest('variables', { variablesReference: columnRef });
+	res.Columns.Count = resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.Count')[0].value;
+	var resForColumnList = await session.customRequest('variables', { variablesReference: resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.List')[0].variablesReference });
+
+	resForColumnList = await getMoreDataIfAny(session, resForColumnList);
+	res.Columns.List = resForColumnList.variables.filter(x => x.name != 'Raw View').map(x => { return x.value });
+
+	return res;
+}
+
+// Get rows from data table
+async function getRowsOfDataTable(session, res, dataTable, recordPerPage, currentPage)
+{
+	res.Rows = {};
+
+	const rowRef = dataTable.variables.filter(x => x.evaluateName == 'dataTable.Rows')[0].variablesReference;
+	const resForRow = await session.customRequest('variables', { variablesReference: rowRef });
+	res.Rows.Count = resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows.Count')[0].value;
+	var resForRowList = await session.customRequest('variables', { variablesReference: resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows, results')[0].variablesReference });
+		
+	// Calculate total page based on count of rows
+	if (res.Rows.Count < (recordPerPage * 2))
+	{
+		res.totalPage = Math.ceil(res.Rows.Count / recordPerPage);
+	}
+	else
+	{
+		if (res.Rows.Count % recordPerPage > 3)
+			res.totalPage = Math.ceil(res.Rows.Count / recordPerPage);
+		else
+			res.totalPage = Math.trunc(res.Rows.Count / recordPerPage);
+	}
+
+	resForRowList = await getPaginatedData(session, resForRowList, currentPage);
+	var rows = [];
+	await Promise.all(resForRowList.variables.map(async (rowVariable) => {
+		var row = await session.customRequest('variables', { variablesReference: rowVariable.variablesReference });
+		rows.push(row);
+	}));
+
+	var rowsItemVariableRef = rows.map(row => { return row.variables }).map(row => { return row.filter(x => x.name.includes('ItemArray'))[0].variablesReference });
+	var rowItemArray = [];
+	await Promise.all(rowsItemVariableRef.map(async (rowItem) => {
+		var rowItem = await session.customRequest('variables', { variablesReference: rowItem });
+		rowItemArray.push(rowItem);
+	}));
+
+	res.Rows.List = await Promise.all(rowItemArray.map(async (row) => { row = await getMoreDataIfAny(session, row); return row.variables.map(rowItem =>  { return rowItem.value }) }));
+	return res;
+}
+
+// Get more data if available
+async function getMoreDataIfAny(session, variableResponse)
+{
+	var moreRows = variableResponse.variables.filter(x => x.name == '[More]');
+	while(moreRows.length > 0)
+	{
+		var index = variableResponse.variables.indexOf(moreRows);
+		variableResponse.variables.splice(index, 1);
+		var moreRowsResult = await session.customRequest('variables', { variablesReference: moreRows[0].variablesReference });
+		variableResponse.variables.push(...moreRowsResult.variables);
+		moreRows = variableResponse.variables.filter(x => x.name == '[More]');
+	}
+	return variableResponse;
+}
+
+// Get paginated data for DataTable
+async function getPaginatedData(session, resForRowList, currentPage)
+{
+	var moreRows = resForRowList.variables.filter(x => x.name == '[More]');
+	var i = 1;
+	while (moreRows.length > 0 && i <= currentPage)
+	{
+		var index = resForRowList.variables.indexOf(moreRows);
+		resForRowList.variables.splice(index, 1);
+		if (currentPage > i)
+		{
+			var moreRowsResult = await session.customRequest('variables', { variablesReference: moreRows[0].variablesReference });
+			if (currentPage - 1 == i)
+			{
+				resForRowList.variables = [];
+				resForRowList.variables.push(...moreRowsResult.variables);
+				moreRows = resForRowList.variables.filter(x => x.name == '[More]');
+			}
+			else
+			{
+				moreRows = moreRowsResult.variables.filter(x => x.name == '[More]');
+			}
+		}
+		i++;
+	}
+	return resForRowList;
 }
 // #endregion
 

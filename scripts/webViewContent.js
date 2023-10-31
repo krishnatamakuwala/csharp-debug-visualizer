@@ -1,6 +1,6 @@
 const utilities = require('./utilities');
 
-function getWebViewContent(selectedVariable, result, variableType) {
+function getWebViewContent(selectedVariable, result, variableType, currentPage, totalPage) {
 	let finalWebContent = '';
 	let preWebContent = `
 	<!DOCTYPE html>
@@ -13,6 +13,38 @@ function getWebViewContent(selectedVariable, result, variableType) {
 		<style>
 			@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Roboto+Mono&display=swap');
 			
+			.loader-container {
+				position: absolute;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				width: 100%;
+				height: auto;
+			}
+
+			.loader {
+				position: relative;
+				z-index: 1;
+				top: 200px;
+				width: 32px;
+				height: 32px;
+				border: 6px solid #f3f3f3;
+				border-radius: 50%;
+				border-top: 6px solid #454754;
+				-webkit-animation: spin 1.5s linear infinite;
+				animation: spin 1.5s linear infinite;
+			}
+			  
+			@-webkit-keyframes spin {
+				0% { -webkit-transform: rotate(0deg); }
+				100% { -webkit-transform: rotate(360deg); }
+			}
+			  
+			@keyframes spin {
+				0% { transform: rotate(0deg); }
+				100% { transform: rotate(360deg); }
+			}
+
 			.main-container {
 				display: flex;
 				flex-direction: column;
@@ -101,6 +133,14 @@ function getWebViewContent(selectedVariable, result, variableType) {
 				opacity: 1;
 			}
 
+			.ddlPages {
+				background-color: #454754;
+				color: white;
+				border: 1px solid #e6e6e6;
+				border-radius: 10%;
+				text-align: center;
+			}
+
 			.popup {
 				position: relative;
 				display: inline-block;
@@ -182,7 +222,10 @@ function getWebViewContent(selectedVariable, result, variableType) {
 			}
 		</style>
 	</head>
-	<body>
+	<body onload="stopLoader()">
+		<div id="loader-container" class="loader-container">
+			<div id="loader" class="loader"></div>
+		</div>
 		<div id="main-container" class="main-container">`
 
 	// Conditional functionalities
@@ -240,6 +283,18 @@ function getWebViewContent(selectedVariable, result, variableType) {
 					<h3>Variable Name : ${selectedVariable}</h3>
 					<p>Column Count : ${result.Columns.Count}</p>
 					<p>Row Count : ${result.Rows.Count}</p>
+					<p>Total Page : ${totalPage}</p>
+					<div style="display: flex;">
+						<p style="margin-top: 0px">Current Page : </p>
+						<select id="ddlPages" class="ddlPages" onchange="getPaginatedData(this)" style="margin-bottom: 10px;">`;
+		for(var page = 1; page <= totalPage; page++)
+		{
+			let optionString = `<option value="${page}">${page}</option>`;
+			resultWebContent += optionString;
+		}
+		resultWebContent +=	`
+						</select>
+					</div>
 					<table id="datatable">
 						<thead>
 							<tr>
@@ -254,7 +309,7 @@ function getWebViewContent(selectedVariable, result, variableType) {
 						<tbody>
 		`;
 
-		let i = 1;
+		let i = ((currentPage - 1) * 25) + 1;
 		result.Rows.List.forEach(row => {
 			resultWebContent += '<tr>';
 			resultWebContent += `<td>${i}.</td>`;
@@ -310,7 +365,18 @@ function getWebViewContent(selectedVariable, result, variableType) {
 		`;
 		
 	let scriptWebContent = `
-		<script>`;
+		<script>
+			function stopLoader()
+			{
+				document.getElementById("loader").style.display = "none";
+				document.getElementById("main-container").style.webkitFilter = "none";
+			}
+			
+			function startLoader()
+			{
+				document.getElementById("loader").style.display = "block";
+				document.getElementById("main-container").style.webkitFilter = "blur(5px)";
+			}`;
 
 	// Conditional scripts
 	if (variableType != "System.Data.DataTable")
@@ -347,6 +413,19 @@ function getWebViewContent(selectedVariable, result, variableType) {
 	else
 	{
 		scriptWebContent +=	`
+			var ddlPages = document.getElementById("ddlPages");
+			ddlPages.value = ${currentPage};
+
+			function getPaginatedData(currentPage)
+			{
+				startLoader();
+				const vscode = acquireVsCodeApi();
+				vscode.postMessage({
+					command: 'getPaginatedData',
+					text: currentPage.value
+				});
+			}
+
 			function saveAsCSV()
 			{
 				var popup = document.getElementById("popup-message");
