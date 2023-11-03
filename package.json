@@ -2,7 +2,7 @@
   "name": "csharp-debug-visualizer",
   "displayName": "C# Debug Visualizer",
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "author": {
     "name": "Krishna Tamakuwala",
     "email": "krishna02122001@gmail.com"
