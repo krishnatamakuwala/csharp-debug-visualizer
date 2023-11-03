@@ -1,6 +1,6 @@
 const utilities = require('./utilities');
 
-function getWebViewContent(selectedVariable, result, variableType, currentPage, totalPage) {
+function getWebViewContent(primaryColor, selectedVariable, result, variableType, currentPage, totalPage) {
 	let finalWebContent = '';
 	let preWebContent = `
 	<!DOCTYPE html>
@@ -30,7 +30,7 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 				height: 32px;
 				border: 6px solid #f3f3f3;
 				border-radius: 50%;
-				border-top: 6px solid #454754;
+				border-top: 6px solid ${primaryColor};
 				-webkit-animation: spin 1.5s linear infinite;
 				animation: spin 1.5s linear infinite;
 			}
@@ -72,7 +72,7 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 				border: 1px solid;
 				border-radius: 6px;
 				color: #fff;
-				background-color: #454754;
+				background-color: ${primaryColor};
 				border-color: #1b1f2326;
 				box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset;
 				transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
@@ -95,11 +95,11 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 			}
 
 			button:hover {
-				background-color: #383b45;
+				filter: brightness(.75);
 				border-color: #1b1f2326;
 				transition-duration: 0.1s;
 			}
-			  
+
 			button .tooltiptext {
 				visibility: hidden;
 				width: 100px;
@@ -134,7 +134,7 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 			}
 
 			.ddlPages {
-				background-color: #454754;
+				background-color: ${primaryColor};
 				color: white;
 				border: 1px solid #e6e6e6;
 				border-radius: 10%;
@@ -154,8 +154,8 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 			.popup .popup-message {
 				visibility: hidden;
 				width: 160px;
-				background-color: #fff;
-				color: #555;
+				background-color: ${primaryColor};
+				color: white;
 				text-align: center;
 				border-radius: 6px;
 				padding: 8px 0;
@@ -217,7 +217,7 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 				padding-top: 12px;
 				padding-bottom: 12px;
 				text-align: left;
-				background-color: #454754;
+				background-color: ${primaryColor};
 				color: white;
 			}
 		</style>
@@ -294,6 +294,7 @@ function getWebViewContent(selectedVariable, result, variableType, currentPage, 
 		}
 		resultWebContent +=	`
 						</select>
+						<p style="margin-top: 0px"><i> (Record per page : 25)</i></p>
 					</div>
 					<table id="datatable">
 						<thead>

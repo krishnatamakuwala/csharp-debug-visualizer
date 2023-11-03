@@ -1,8 +1,12 @@
 {
   "name": "csharp-debug-visualizer",
   "displayName": "C# Debug Visualizer",
-  "description": "",
-  "version": "0.0.1",
+  "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
+  "version": "1.0.1",
+  "author": {
+    "name": "Krishna Tamakuwala",
+    "email": "krishna02122001@gmail.com"
+  },
   "engines": {
     "vscode": "^1.82.0"
   },
@@ -12,6 +16,19 @@
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
+    "configuration":[
+      {
+        "title": "C# Debug Visualizer",
+        "properties": {
+          "charpDebugVisualizer.primaryColor": {
+            "type": "string",
+            "default": "#454754",
+            "scope": "window",
+            "markdownDescription": "Specifiy the hex value for primary color of C# Debug Visualizer extension.\n\n*Note: Use those colors which increases the readabilty.*"
+          }
+        }
+      }
+    ],
     "commands": [{
       "command": "csharp-debug-visualizer.visualize",
       "title": "Visualize"

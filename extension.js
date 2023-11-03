@@ -1,24 +1,19 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const webViewContent = require('./scripts/webViewContent');
 const utilities = require('./scripts/utilities');
 
 const recordPerPage = 25;
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('csharp-debug-visualizer.visualize', async function () {
-		// The code you place here will be executed every time your command is executed
+
+		// User settings for Extension 
+		const extensionSettings = vscode.workspace.getConfiguration("charpDebugVisualizer");
+		const primaryColor = extensionSettings.get("primaryColor");
 
 		// Get access to editor
 		const editor = vscode.window.activeTextEditor;
@@ -57,6 +52,12 @@ function activate(context) {
 			const variableTypeResponse = await session.customRequest('evaluate', { expression: `${selectedVariable}.GetType().FullName`, frameId: frameId });
 			const variableType = utilities.getCustomParsedString(variableTypeResponse.result);
 
+			if(variableType.toLowerCase().includes("error".toLowerCase()))
+			{
+				var errorMessage = variableType;
+				throw new Error(errorMessage);
+			}
+
 			vscode.window.showInformationMessage("Visualizing...");
 
 			var result = await getResult(session, variableResponse, variables, variableType, selectedVariable, currentPage);
@@ -75,13 +76,13 @@ function activate(context) {
 					enableFindWidget: true
 				}
 			);
-			panel.webview.html = webViewContent.getWebViewContent(selectedVariable, result, variableType, currentPage, totalPage);
+			panel.webview.html = webViewContent.getWebViewContent(primaryColor, selectedVariable, result, variableType, currentPage, totalPage);
 			panel.webview.onDidReceiveMessage(
 				message => {
 				  switch (message.command) {
 					case 'getPaginatedData':
 					  currentPage = parseInt(message.text);
-					  updateWebView(panel, session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage);
+					  updateWebView(primaryColor, panel, session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage);
 					  return;
 				  }
 				},
@@ -100,10 +101,10 @@ function activate(context) {
 // #region Common methods or functions
 
 // Update Webview
-async function updateWebView(panel, session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage)
+async function updateWebView(primaryColor, panel, session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage)
 {
 	var result = await getResult(session, variableResponse, variables, variableType, selectedVariable, currentPage, totalPage);
-	panel.webview.html = webViewContent.getWebViewContent(selectedVariable, result, variableType, currentPage, totalPage);
+	panel.webview.html = webViewContent.getWebViewContent(primaryColor, selectedVariable, result, variableType, currentPage, totalPage);
 }
 
 // Get result for selected variable
@@ -163,11 +164,6 @@ async function getResult(session, variableResponse, variables, variableType, sel
 		{
 			var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
 			result = utilities.getCustomParsedString(result);
-		}
-		else if(variableType.toLowerCase().includes("error".toLowerCase()))
-		{
-			var errorMessage = variableType;
-			throw new Error(errorMessage);
 		}
 		else
 		{

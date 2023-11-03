@@ -1,65 +1,73 @@
-# code README
+# C# Debug Visualizer
 
-This is the README for your extension "code". After writing up a brief description, we recommend including the following sections.
+It can be used for visualizing the basic datatype variables, including `DataTable` for C# only. It is simple to install and run, and it is free to use.
+
+## Install
+
+Search **'C# Debug Visualizer'** in the extension tab and install it, and you are ready to use it.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+It can visualize the system-defined datatypes along with the DataTable, DataColumn, and DataRow from System.Data class and JSON object from Newtonsoft.Json.Linq class.
 
-For example if there is an image subfolder under your extension project workspace:
+For example, one can select the variable by putting a cursor over it and run the Visualize command in context by opening it by right-clicking.
 
-\!\[feature X\]\(images/feature-x.png\)
+![Run extension with 'Visualize'](<images/simple-demo.gif>)
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Moreover, you can visualize a data table too, even with the pagination feature.
+
+![Visualizing DataTable](<images/datatable.gif>)
+
+If the result of the variable is too long to scroll and you are *Lazy*, then you can use the 'Word Wrap' feature to *let your fingers and arm rest!*
+
+![Use word wrap feature](<images/word-wrap.gif>)
+
+Even feeling lazy to copy the result? Then try the 'Copy to Clipboard' feature, and it will copy the result to the clipboard.
+
+![Use copy to clipboard feature](<images/copy-to-clipboard.gif>)
+
+Furthermore, you can save the output of the datatable in CSV too, with just one click on 'Save As CSV' and at your preferred location.
+
+![Use save as csv feature](<images/save-as-csv.gif>)
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+There is no need for any additional required resources, just VS code and this extension.
+
+- Your C# code must be in debug mode.
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+If you want to change settings for this extension, then you can change it from settings for this extension.
 
 For example:
 
+![Change primary color](<images/user-settings.png>)
+
 This extension contributes the following settings:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+* `charpDebugVisualizer.primaryColor`: Set the primary color for this extension. 
+* Default color is `#454754`.
+
+> Tip: Use those colors, which increase your readability.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+This extension is supported only for basic variables like `Integer, Character, String, Boolean, Array, DataRow, DataColumn, DataTable`, and some other variable types. So please be patient and feel free to contact us if you face any issues, because this is an initial version.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+This are our version details.
 
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+The initial release of this extension supports basic variable types, including DataTable.
 
 ---
 
-## Working with Markdown
+## Contributors
+- [Krishna Tamakuwala](https://github.com/krishnatamakuwala)
 
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+- [Piyush Katariya](https://github.com/PiyushKatariya)
 
 **Enjoy!**
