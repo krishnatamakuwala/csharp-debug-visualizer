@@ -3,6 +3,7 @@
   "displayName": "C# Debug Visualizer",
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
   "license": "SEE LICENSE IN LICENSE",
+  "publisher": "KrishnaPiyush",
   "icon": "images/csharp-debug-visualizer.png",
   "repository": {
     "type": "git",
