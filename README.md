@@ -30,6 +30,10 @@ Furthermore, you can save the output of the datatable in CSV too, with just one 
 
 ![Use save as csv feature](<images/save-as-csv.gif>)
 
+There is an vs code inbuilt searching feature too. You only have to press `Ctrl + F` and then enter your search text.
+
+![Use searching feature](<images/vscode-searching.gif>)
+
 ## Requirements
 
 There is no need for any additional required resources, just VS code and this extension.

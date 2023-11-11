@@ -2,24 +2,37 @@
   "name": "csharp-debug-visualizer",
   "displayName": "C# Debug Visualizer",
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
+  "license": "SEE LICENSE IN LICENSE",
+  "icon": "images/csharp-debug-visualizer.png",
   "repository": {
-    "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer"
+    "type": "git",
+    "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
   },
   "version": "1.0.0",
   "author": {
-    "name": "Krishna Tamakuwala",
+    "name": "Krishna Tamakuwala & Piyush Katariya",
     "email": "krishna02122001@gmail.com"
   },
   "engines": {
     "vscode": "^1.82.0"
   },
   "categories": [
-    "Other"
+    "Visualization"
   ],
+  "keywords": [
+    "Visualizer",
+    "Datatable",
+    "Debug",
+    "C#",
+    "Watch Table"
+  ],
+  "preview": true,
+  "pricing": "Free",
+  "homepage": "https://github.com/krishnatamakuwala/csharp-debug-visualizer/blob/main/README.md",
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
-    "configuration":[
+    "configuration": [
       {
         "title": "C# Debug Visualizer",
         "properties": {
@@ -27,21 +40,25 @@
             "type": "string",
             "default": "#454754",
             "scope": "window",
-            "markdownDescription": "Specifiy the hex value for primary color of C# Debug Visualizer extension.\n\n*Note: Use those colors which increases the readabilty.*"
+            "markdownDescription": "Specifiy the hex value (with #) for primary color of C# Debug Visualizer extension. Ex. `#454754`\n\n*Note: Use those colors which increases the readabilty.*"
           }
         }
       }
     ],
-    "commands": [{
-      "command": "csharp-debug-visualizer.visualize",
-      "title": "Visualize"
-    }],
-    "menus": {
-      "editor/context": [{
+    "commands": [
+      {
         "command": "csharp-debug-visualizer.visualize",
-        "group": "visualize",
-        "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
-      }]
+        "title": "Visualize"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "csharp-debug-visualizer.visualize",
+          "group": "visualize",
+          "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
+        }
+      ]
     }
   },
   "scripts": {
@@ -50,13 +67,16 @@
     "test": "node ./test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.82.0",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/vscode": "^1.82.0",
+    "@vscode/test-electron": "^2.3.4",
     "eslint": "^8.47.0",
     "glob": "^10.3.3",
     "mocha": "^10.2.0",
-    "typescript": "^5.1.6",
-    "@vscode/test-electron": "^2.3.4"
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "npm": "^10.2.3"
   }
 }
