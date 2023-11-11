@@ -15,11 +15,18 @@ function activate(context) {
 		const extensionSettings = vscode.workspace.getConfiguration("charpDebugVisualizer");
 		const primaryColor = extensionSettings.get("primaryColor");
 
+		// Validate user settings
+		if(!utilities.validateUserSettings(primaryColor))
+		{
+			vscode.window.showInformationMessage("Primary color is not valid!");
+			return;
+		}
+
 		// Get access to editor
 		const editor = vscode.window.activeTextEditor;
 		if(!editor)
 		{
-			vscode.window.showInformationMessage("Editor does not exist");
+			vscode.window.showInformationMessage("Editor does not exist!");
 			return;
 		}
 
