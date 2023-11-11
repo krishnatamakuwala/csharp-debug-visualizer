@@ -242,10 +242,10 @@ async function getColumnsOfDataTable(session, res, dataTable)
 {
 	res.Columns = {};
 
-	const columnRef = dataTable.variables.filter(x => x.evaluateName == 'dataTable.Columns')[0].variablesReference;
+	const columnRef = dataTable.variables.filter(x => x.evaluateName == `${res.name}.Columns`)[0].variablesReference;
 	const resForColumn = await session.customRequest('variables', { variablesReference: columnRef });
-	res.Columns.Count = resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.Count')[0].value;
-	var resForColumnList = await session.customRequest('variables', { variablesReference: resForColumn.variables.filter(x => x.evaluateName == 'dataTable.Columns.List')[0].variablesReference });
+	res.Columns.Count = resForColumn.variables.filter(x => x.evaluateName == `${res.name}.Columns.Count`)[0].value;
+	var resForColumnList = await session.customRequest('variables', { variablesReference: resForColumn.variables.filter(x => x.evaluateName == `${res.name}.Columns.List`)[0].variablesReference });
 
 	resForColumnList = await getMoreDataIfAny(session, resForColumnList);
 	res.Columns.List = resForColumnList.variables.filter(x => x.name != 'Raw View').map(x => { return x.value });
@@ -258,10 +258,10 @@ async function getRowsOfDataTable(session, res, dataTable, recordPerPage, curren
 {
 	res.Rows = {};
 
-	const rowRef = dataTable.variables.filter(x => x.evaluateName == 'dataTable.Rows')[0].variablesReference;
+	const rowRef = dataTable.variables.filter(x => x.evaluateName == `${res.name}.Rows`)[0].variablesReference;
 	const resForRow = await session.customRequest('variables', { variablesReference: rowRef });
-	res.Rows.Count = resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows.Count')[0].value;
-	var resForRowList = await session.customRequest('variables', { variablesReference: resForRow.variables.filter(x => x.evaluateName == 'dataTable.Rows, results')[0].variablesReference });
+	res.Rows.Count = resForRow.variables.filter(x => x.evaluateName == `${res.name}.Rows.Count`)[0].value;
+	var resForRowList = await session.customRequest('variables', { variablesReference: resForRow.variables.filter(x => x.evaluateName == `${res.name}.Rows, results`)[0].variablesReference });
 		
 	// Calculate total page based on count of rows
 	if (res.Rows.Count < (recordPerPage * 2))
