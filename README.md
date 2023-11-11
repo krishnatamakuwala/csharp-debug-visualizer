@@ -12,27 +12,27 @@ It can visualize the system-defined datatypes along with the DataTable, DataColu
 
 For example, one can select the variable by putting a cursor over it and run the Visualize command in context by opening it by right-clicking.
 
-![Run extension with 'Visualize'](<images/simple-demo.gif>)
+![Run extension with 'Visualize'](images/simple-demo.gif)
 
 Moreover, you can visualize a data table too, even with the pagination feature.
 
-![Visualizing DataTable](<images/datatable.gif>)
+![Visualizing DataTable](images/datatable.gif)
 
 If the result of the variable is too long to scroll and you are *Lazy*, then you can use the 'Word Wrap' feature to *let your fingers and arm rest!*
 
-![Use word wrap feature](<images/word-wrap.gif>)
+![Use word wrap feature](images/word-wrap.gif)
 
 Even feeling lazy to copy the result? Then try the 'Copy to Clipboard' feature, and it will copy the result to the clipboard.
 
-![Use copy to clipboard feature](<images/copy-to-clipboard.gif>)
+![Use copy to clipboard feature](images/copy-to-clipboard.gif)
 
 Furthermore, you can save the output of the datatable in CSV too, with just one click on 'Save As CSV' and at your preferred location.
 
-![Use save as csv feature](<images/save-as-csv.gif>)
+![Use save as csv feature](images/save-as-csv.gif)
 
 There is an vs code inbuilt searching feature too. You only have to press `Ctrl + F` and then enter your search text.
 
-![Use searching feature](<images/vscode-searching.gif>)
+![Use searching feature](images/vscode-searching.gif)
 
 ## Requirements
 
@@ -46,7 +46,7 @@ If you want to change settings for this extension, then you can change it from s
 
 For example:
 
-![Change primary color](<images/user-settings.png>)
+![Change primary color](images/user-settings.png)
 
 This extension contributes the following settings:
 
