@@ -41,11 +41,20 @@ function activate(context) {
 
 			// Get Thread
 			const threadResponse = await session.customRequest('threads');
-			const threadId = threadResponse.threads[0].id;
 
-			// Get StackFrame
-			const stackResponse = await session.customRequest('stackTrace', { threadId: threadId, startFrame: 0 });
-			const frameId = stackResponse.stackFrames[0].id;
+			// Get StackFrame 
+			// (PS: We can also use stackFrameId = 1000 as it is always 1000, so it will reduce call)
+			var frameId = 0;
+			var stackResponse;
+			await Promise.all(threadResponse.threads.map(async (thread) => {
+				stackResponse = await session.customRequest('stackTrace', { threadId: thread.id, startFrame: 0 });
+				if (stackResponse.stackFrames.length > 0)
+				{
+					currentStackResponse = stackResponse.stackFrames.filter(x => x.id == 1000);
+					if (currentStackResponse.length > 0)
+						frameId = currentStackResponse[0].id;
+				}
+			}));
 
 			// Get Scope
 			const scopeResponse = await session.customRequest('scopes', { frameId: frameId });
@@ -171,6 +180,10 @@ async function getResult(session, variableResponse, variables, variableType, sel
 		{
 			var result = variables.filter(x => x.evaluateName == selectedVariable)[0].value;
 			result = utilities.getCustomParsedString(result);
+		}
+		else if(variableType.includes("System.NullReferenceException"))
+		{
+			var result = "null";
 		}
 		else
 		{

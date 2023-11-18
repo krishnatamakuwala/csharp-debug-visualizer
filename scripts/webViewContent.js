@@ -9,7 +9,6 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 	  	<meta charset="UTF-8">
 	  	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	  	<title>Visualize</title>
-		<script src="https://kit.fontawesome.com/e23b471cdb.js" crossorigin="anonymous"></script>
 		<style>
 			@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Roboto+Mono&display=swap');
 			
@@ -28,9 +27,9 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 				top: 200px;
 				width: 32px;
 				height: 32px;
-				border: 6px solid #f3f3f3;
+				border: 6px solid #b5b5b5;
 				border-radius: 50%;
-				border-top: 6px solid ${primaryColor};
+				border-top: 6px solid #f3f3f3;
 				-webkit-animation: spin 1.5s linear infinite;
 				animation: spin 1.5s linear infinite;
 			}
@@ -234,11 +233,15 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 		preWebContent += `
 			<div id="function-container" class="function-container">
 				<button id="btn-copyToClipBoard" onclick="copyToClipBoard()">
-					<i class="fa-regular fa-clipboard" style="color: #ffffff;"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 384 512" style="fill: #ffffff;">
+						<path d="M280 64h40c35.3 0 64 28.7 64 64V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128C0 92.7 28.7 64 64 64h40 9.6C121 27.5 153.3 0 192 0s71 27.5 78.4 64H280zM64 112c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H304v24c0 13.3-10.7 24-24 24H192 104c-13.3 0-24-10.7-24-24V112H64zm128-8a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/>
+					</svg>
 					<span class="tooltiptext">Copy To Clipboard</span>
 				</button>
 				<button id="btn-wordWrap" onclick="wordWrap()">
-					<i class="fa-solid fa-indent" style="color: #ffffff;"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512" style="fill: #ffffff;">
+						<path d="M0 64C0 46.3 14.3 32 32 32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64zM192 192c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H224c-17.7 0-32-14.3-32-32zm32 96H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H224c-17.7 0-32-14.3-32-32s14.3-32 32-32zM0 448c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM127.8 268.6L25.8 347.9C15.3 356.1 0 348.6 0 335.3V176.7c0-13.3 15.3-20.8 25.8-12.6l101.9 79.3c8.2 6.4 8.2 18.9 0 25.3z"/>
+					</svg>
 					<span class="tooltiptext">Word Wrap</span>
 				</button>
 			</div>`;
@@ -248,7 +251,9 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 		preWebContent += `
 			<div id="function-container" class="function-container">
 				<button id="btn-saveAsCSV" onclick="saveAsCSV()">
-					<i class="fa-solid fa-download" style="color: #ffffff;"></i>
+					<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512" style="fill: #ffffff;">
+						<path d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V274.7l-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7V32zM64 352c-35.3 0-64 28.7-64 64v32c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V416c0-35.3-28.7-64-64-64H346.5l-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352H64zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"/>
+					</svg>
 					<span class="tooltiptext">Save As CSV</span>
 				</button>
 			</div>`;		
@@ -341,6 +346,14 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 			`;
 		}
 		else if(variableType.includes("AnonymousType") || variableType.includes("Newtonsoft.Json.Linq.JObject"))
+		{
+			resultWebContent = `
+				<div id="result-container" class="result-container">
+					<p>${selectedVariable} : <code>${result}</code></p>
+				</div>
+			`;
+		}
+		else if(variableType.includes("System.NullReferenceException"))
 		{
 			resultWebContent = `
 				<div id="result-container" class="result-container">
