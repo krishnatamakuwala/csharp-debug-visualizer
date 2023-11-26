@@ -4,7 +4,7 @@
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
   "license": "SEE LICENSE IN LICENSE",
   "publisher": "KrishnaPiyush",
-  "icon": "images/csharp-debug-visualizer.png",
+  "icon": "logo/csharp-debug-visualizer.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
@@ -27,11 +27,10 @@
     "C#",
     "Watch Table"
   ],
-  "preview": true,
   "pricing": "Free",
   "homepage": "https://github.com/krishnatamakuwala/csharp-debug-visualizer/blob/main/README.md",
   "activationEvents": [],
-  "main": "./extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "configuration": [
       {
@@ -60,18 +59,31 @@
           "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
         }
       ]
-    }
+    },
+    "keybindings":[
+      {
+        "command": "csharp-debug-visualizer.visualize",
+        "key": "Shift+Alt+V",
+        "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
-    "test": "node ./test/runTest.js"
+    "test": "node ./test/runTest.js",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "test-compile": "tsc -p ./"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
     "@types/vscode": "^1.82.0",
     "@vscode/test-electron": "^2.3.4",
+    "esbuild": "^0.19.5",
     "eslint": "^8.47.0",
     "glob": "^10.3.3",
     "mocha": "^10.2.0",

@@ -10,7 +10,7 @@ Search **'C# Debug Visualizer'** in the extension tab and install it, and you ar
 
 It can visualize the system-defined datatypes along with the DataTable, DataColumn, and DataRow from System.Data class and JSON object from Newtonsoft.Json.Linq class.
 
-For example, one can select the variable by putting a cursor over it and run the Visualize command in context by opening it by right-clicking.
+For example, one can select the variable by putting a cursor over it and run the Visualize command in context by opening it by right-clicking or by pressing `Shift+Alt+V`.
 
 ![Run extension with 'Visualize'](images/simple-demo.gif)
 
