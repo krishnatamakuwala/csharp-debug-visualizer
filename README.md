@@ -63,7 +63,7 @@ This extension is supported only for basic variables like `Integer, Character, S
 
 This are our version details.
 
-### 1.0.0
+### 1.0.4
 
 The initial release of this extension supports basic variable types, including DataTable.
 
