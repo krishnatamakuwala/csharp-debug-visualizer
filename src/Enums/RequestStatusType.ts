@@ -1,8 +1,10 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+/**
+ * Visualizing request status types
+ */
 export const enum RequestStatusType {
-    Started = 1,
-    InProgress = 2,
-    Completed = 3,
-    Failed = 4,
-    Cancelled = 5
+    started = 1,
+    inProgress = 2,
+    completed = 3,
+    failed = 4,
+    cancelled = 5
 }

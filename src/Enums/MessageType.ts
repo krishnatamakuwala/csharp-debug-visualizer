@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+/**
+ * Notification message type
+ */
 export const enum MessageType {
-    Information = 1,
-    Warning = 2,
-    Error = 3
+    information = 1,
+    warning = 2,
+    error = 3
 }

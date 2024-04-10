@@ -11,21 +11,21 @@ export class NotificationManager {
      */
     public static showMessage(message: string, type: MessageType, messageOption: MessageOptions | undefined = undefined) {
         switch (type) {
-            case MessageType.Information:
+            case MessageType.information:
                 if (messageOption !== undefined) {
                     window.showInformationMessage(message, messageOption);
                 } else {
                     window.showInformationMessage(message);
                 }
                 break;
-            case MessageType.Warning:
+            case MessageType.warning:
                 if (messageOption !== undefined) {
                     window.showWarningMessage(message, messageOption);
                 } else {
                     window.showWarningMessage(message);
                 }
                 break;
-            case MessageType.Error:
+            case MessageType.error:
                 if (messageOption !== undefined) {
                     window.showErrorMessage(message, messageOption);
                 } else {

@@ -2,15 +2,19 @@
  * Details of visualized result for selected variable
  */
 export class Variable {
-    public static varName = '';
-    public static type = '';
-    public static result = '';
-    public static columns = {
-        count: 0,
-        list: []
-    };
-    public static rows = {
-        count: 0,
-        list: []
-    };
+    varName: string = "";
+    type: string = "";
+    result: string = "";
+    columns: Columns | null = null;
+    rows: Rows | null = null;
+}
+
+class Columns {
+    count: number = 0;
+    list: [] = [];
+}
+
+class Rows {
+    count: number = 0;
+    list: [] = [];
 }
