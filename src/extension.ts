@@ -10,19 +10,21 @@ import { ResultHelper } from './Helpers/ResultHelper';
 import { RequestStatusType } from './Enums/RequestStatusType';
 import { DebugSessionDetails } from './Proxies/DebugSessionDetails';
 import { RequestStatus, ProgressTracker } from './Models/RequestProgressStatus';
+import { WebViewHelper } from './Helpers/WebViewHelper';
 
 // This method is called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
 
 	let disposable = vscode.commands.registerCommand('typescript-test-extension-2.helloWorld', async () => {
 		// The code you place here will be executed every time your command is executed
-		RequestStatus.status = RequestStatusType.Started;
+		RequestStatus.status = RequestStatusType.started;
 
 		let customDebugAdapter: CustomDebugAdapter | undefined;
 		let session: DebugSessionDetails | undefined;
+		var variable = new Variable();
 		ProgressTracker.progress = 0;
 		try {
-			RequestStatus.status = RequestStatusType.InProgress;
+			RequestStatus.status = RequestStatusType.inProgress;
 
 			//#region Get session and active stack frame
 			customDebugAdapter = new CustomDebugAdapter(new DebugProxy);
@@ -34,16 +36,16 @@ export function activate(context: vscode.ExtensionContext) {
 			if(!editor) {
 				throw ErrorMessage.editorNotExists;
 			}
-			Variable.varName = Editor.getSelectedVariable(editor);
+			variable.varName = Editor.getSelectedVariable(editor);
 
 			if (session !== undefined && session?.activeStackFrameId !== undefined) {
 				try {
 					//#region Get type of a selected variable
-					Variable.type = (await session?.evaluateExpression(`${Variable.varName}.GetType().FullName`, session?.activeStackFrameId, "variables")).result;
-					Variable.type = Editor.getCustomParsedString(Variable.type);
-					if(Variable.type.toLowerCase().includes("error".toLowerCase()))
+					variable.type = (await session?.evaluateExpression(`${variable.varName}.GetType().FullName`, session?.activeStackFrameId, "variables")).result;
+					variable.type = Editor.getCustomParsedString(variable.type);
+					if(variable.type.toLowerCase().includes("error".toLowerCase()))
 					{
-						var errorMessage = Variable.type;
+						var errorMessage = variable.type;
 						throw new Error(errorMessage);
 					}
 					//#endregion
@@ -55,27 +57,27 @@ export function activate(context: vscode.ExtensionContext) {
 						cancellable: true
 					}, async (progress, token) => {
 						token.onCancellationRequested(() => {
-							RequestStatus.status = RequestStatusType.Cancelled;
+							RequestStatus.status = RequestStatusType.cancelled;
 						});
 
-						progress.report({ increment: (10 - ProgressTracker.progress) });
-						ProgressTracker.progress = 10;
+						progress.report({ increment: (5 - ProgressTracker.progress) });
+						ProgressTracker.progress = 5;
 
-						await ResultHelper.getResult(customDebugAdapter, session, progress);
+						await ResultHelper.getResult(customDebugAdapter, session, variable, progress);
 
 						progress.report({ increment: (100 - ProgressTracker.progress) });
 						ProgressTracker.progress = 100;
-						if (RequestStatus.status === RequestStatusType.InProgress) {
-							RequestStatus.status = RequestStatusType.Completed;
+						if (RequestStatus.status === RequestStatusType.inProgress) {
+							RequestStatus.status = RequestStatusType.completed;
 						}
 
 						const p = new Promise<RequestStatusType>((resolve, reject) => {
 							switch (RequestStatus.status) {
-								case RequestStatusType.Completed:
-								case RequestStatusType.Cancelled:
+								case RequestStatusType.completed:
+								case RequestStatusType.cancelled:
 									resolve(RequestStatus.status);
 									break;
-								case RequestStatusType.Failed:
+								case RequestStatusType.failed:
 									reject();
 									break;
 								default:
@@ -87,13 +89,18 @@ export function activate(context: vscode.ExtensionContext) {
 					});
 					//#endregion
 
-					if (processResult === RequestStatusType.Completed) {
-						NotificationManager.showMessage(InformationMessage.visualized, MessageType.Information);
-					} else if (processResult === RequestStatusType.Cancelled) {
-						NotificationManager.showMessage(WarningMessage.cancelled, MessageType.Warning);
+					//#region Create Webview
+					let webViewHelper = new WebViewHelper();
+					webViewHelper.createWebView(context);
+					//#endregion
+
+					if (processResult === RequestStatusType.completed) {
+						NotificationManager.showMessage(InformationMessage.visualized, MessageType.information);
+					} else if (processResult === RequestStatusType.cancelled) {
+						NotificationManager.showMessage(WarningMessage.cancelled, MessageType.warning);
 					}
 
-					console.log(Variable.varName + " : " + Variable.type + " : " + Variable.result);
+					console.log(variable.varName + " : " + variable.type + " : " + variable.result);
 				} catch (error) {
 					throw error;
 				}
@@ -102,8 +109,8 @@ export function activate(context: vscode.ExtensionContext) {
 				throw ErrorMessage.undefinedSession;
 			}
 		} catch (error) {
-			RequestStatus.status = RequestStatusType.Failed;
-			NotificationManager.showMessage((error as Error).message, MessageType.Error);
+			RequestStatus.status = RequestStatusType.failed;
+			NotificationManager.showMessage((error as Error).message, MessageType.error);
 		}	
 	});
 

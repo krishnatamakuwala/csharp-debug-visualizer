@@ -3,7 +3,7 @@ import { RequestStatusType } from "../Enums/RequestStatusType";
 /**
  * Maintain request status based on Request Status Type
  */
-export class RequestStatus {
+class RequestStatus {
     private static _status: RequestStatusType;
 
     public static get status(): RequestStatusType {
@@ -17,7 +17,7 @@ export class RequestStatus {
 /**
  * Maintain current progress track
  */
-export class ProgressTracker {
+class ProgressTracker {
     private static _progress: number;
 
     public static get progress(): number {
@@ -27,3 +27,8 @@ export class ProgressTracker {
         this._progress = value;
     }
 }
+
+export {
+    RequestStatus,
+    ProgressTracker
+};

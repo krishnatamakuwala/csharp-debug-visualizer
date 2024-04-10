@@ -75,7 +75,7 @@ export class DebugSessionDetails {
      * @param count The number of variables to return, default value is 0, which will return all variables
      * @returns {Promise<IVariable[]>} Promise of variables
      */
-    public async getVariables(variablesReference: number, start: number | 0, count: number | 0): Promise<IVariable[]> {
+    public async getVariables(variablesReference: number, start: number | 0, count: number | undefined | 0 = undefined): Promise<IVariable[]> {
         try {
             const result = await this._session.customRequest("variables", {
                variablesReference: variablesReference,

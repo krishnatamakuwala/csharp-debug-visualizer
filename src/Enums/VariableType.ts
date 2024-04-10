@@ -1,7 +1,7 @@
 /**
  * Class of single variable types
  */
-export class SingleVariableType {
+class SingleVariableType {
     public static readonly char = "System.Char";
 
     public static readonly string = "System.String";
@@ -38,7 +38,7 @@ export class SingleVariableType {
 /**
  * Class of array variable types
  */
-export class ArrayVariableType {
+class ArrayVariableType {
     public static readonly charArray = "System.Char[]";
 
     public static readonly stringArray = "System.String[]";
@@ -71,3 +71,18 @@ export class ArrayVariableType {
         return [ArrayVariableType.charArray, ArrayVariableType.stringArray, ArrayVariableType.shortArray, ArrayVariableType.ushortArray, ArrayVariableType.intArray, ArrayVariableType.uintArray, ArrayVariableType.longArray, ArrayVariableType.ulongArray, ArrayVariableType.doubleArray, ArrayVariableType.floatArray, ArrayVariableType.boolArray, ArrayVariableType.decimalArray, ArrayVariableType.byteArray, ArrayVariableType.sbyteArray, ArrayVariableType.objArray, ArrayVariableType.stringBuilderArray];
     }
 }
+
+/**
+ * Class of datatable related variable types
+ */
+class DataTable {
+    public static readonly dataColumn = "System.Data.DataColumn";
+    public static readonly dataRow = "System.Data.DataRow";
+    public static readonly dataTable = "System.Data.DataTable";
+}
+ 
+export {
+    SingleVariableType,
+    ArrayVariableType,
+    DataTable
+};
