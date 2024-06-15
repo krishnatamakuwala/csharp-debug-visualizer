@@ -18,19 +18,6 @@ export class DebugProxy {
         return result;
     }
 
-    // public async getActiveStackFrame(session: DebugSession) {
-        // const activeSession = this.sessions.get(session.session);
-        // if (activeSession !== undefined) {
-        //     const threads = await activeSession.getThreads();
-        //     const threadId = session.body.threadId;
-        //     if (threads.includes(threadId))
-        //     {
-        //         const activeStackFrame = await activeSession.getStackTrace(threadId, 0, 1);
-        //         activeSession._activeStackFrameId = activeStackFrame.stackFrames.length > 0 ? activeStackFrame.stackFrames[0].id : undefined;
-        //     }
-        // }
-    // }
-
     constructor() {
         if (debug.activeDebugSession) {
             this.getDebugSessionDetails(debug.activeDebugSession);
@@ -43,12 +30,5 @@ export class DebugProxy {
         debug.onDidTerminateDebugSession(session => {
             this.sessions.delete(session);
         });
-
-        // debug.onDidReceiveDebugSessionCustomEvent(session => {
-        //     console.log(session.event);
-        //     if(session.event === "stopped") {
-        //         // this.getActiveStackFrame(session);
-        //     }
-        // });
     }
 }

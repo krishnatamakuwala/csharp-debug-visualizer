@@ -11,6 +11,7 @@ import { RequestStatusType } from './Enums/RequestStatusType';
 import { DebugSessionDetails } from './Proxies/DebugSessionDetails';
 import { RequestStatus, ProgressTracker } from './Models/RequestProgressStatus';
 import { WebViewHelper } from './Helpers/WebViewHelper';
+import { Themes } from './Models/Configuration';
 
 // This method is called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -31,9 +32,10 @@ export function activate(context: vscode.ExtensionContext) {
 			await customDebugAdapter.getActiveStackFrame();
 			session = customDebugAdapter.activeSession;
 			//#endregion
-
+			
+			Themes.configureTheme();
 			const editor = vscode.window.activeTextEditor;
-			if(!editor) {
+			if (!editor) {
 				throw ErrorMessage.editorNotExists;
 			}
 			variable.varName = Editor.getSelectedVariable(editor);
@@ -91,7 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 					//#region Create Webview
 					let webViewHelper = new WebViewHelper();
-					webViewHelper.createWebView(context);
+					webViewHelper.createWebView(context, variable);
 					//#endregion
 
 					if (processResult === RequestStatusType.completed) {
@@ -106,7 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			}
 			else {
-				throw ErrorMessage.undefinedSession;
+				throw Error(ErrorMessage.undefinedSession);
 			}
 		} catch (error) {
 			RequestStatus.status = RequestStatusType.failed;

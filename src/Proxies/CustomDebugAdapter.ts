@@ -29,28 +29,30 @@ export class CustomDebugAdapter {
         this._activeSession = activeDebugSession
                             ? this.debugProxy.getDebugSessionDetails(activeDebugSession)
                             : undefined;
-        console.log("active session : ", this._activeSession);
     }
 
     /**
      * Get active stack frame based on active debug session
      */
     public async getActiveStackFrame() {
+        var isNew = true;
         if (this.activeSession !== undefined) {
-            const threads = await this.activeSession.getThreads();
-            console.log(typeof(threads));
-            console.log(threads);
-            var stackTrace;
-            await Promise.all(threads.map(async (thread) => {
-                if (this.activeSession !== undefined && this.activeSession.activeStackFrameId === undefined)
-                {
-                    stackTrace = await this.activeSession.getStackTrace(thread.id, 0);
-                    if (stackTrace.totalFrames !== undefined && stackTrace.totalFrames > 0 && this.activeSession.activeStackFrameId === undefined)
+            if (isNew) {
+                this.activeSession.activeStackFrameId = 1000;
+            } else {
+                const threads = await this.activeSession.getThreads();
+                var stackTrace;
+                await Promise.all(threads.map(async (thread) => {
+                    if (this.activeSession !== undefined && this.activeSession.activeStackFrameId === undefined)
                     {
-                        this.activeSession.activeStackFrameId = stackTrace.stackFrames.find(x => x.id === 1000)?.id;
+                        stackTrace = await this.activeSession.getStackTrace(thread.id, 0);
+                        if (stackTrace.totalFrames !== undefined && stackTrace.totalFrames > 0 && this.activeSession.activeStackFrameId === undefined)
+                        {
+                            this.activeSession.activeStackFrameId = stackTrace.stackFrames.find(x => x.id === 1000)?.id;
+                        }
                     }
-                }
-            }));
+                }));
+            }
         }
     }
 

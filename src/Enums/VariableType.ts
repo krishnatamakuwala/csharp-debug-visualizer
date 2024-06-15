@@ -30,7 +30,7 @@ class SingleVariableType {
 
     public static readonly stringBuilder = "System.Text.StringBuilder";
 
-    public static get typeArray() {
+    public static get typeArray(): string[] {
         return [SingleVariableType.char, SingleVariableType.string, SingleVariableType.short, SingleVariableType.ushort, SingleVariableType.int, SingleVariableType.uint, SingleVariableType.long, SingleVariableType.ulong, SingleVariableType.double, SingleVariableType.float, SingleVariableType.bool, SingleVariableType.decimal, SingleVariableType.byte, SingleVariableType.sbyte, SingleVariableType.obj, SingleVariableType.stringBuilder];
     }
 }
@@ -67,7 +67,7 @@ class ArrayVariableType {
 
     public static readonly stringBuilderArray = "System.Text.StringBuilder[]";
 
-    public static get typeArray() {
+    public static get typeArray(): string[] {
         return [ArrayVariableType.charArray, ArrayVariableType.stringArray, ArrayVariableType.shortArray, ArrayVariableType.ushortArray, ArrayVariableType.intArray, ArrayVariableType.uintArray, ArrayVariableType.longArray, ArrayVariableType.ulongArray, ArrayVariableType.doubleArray, ArrayVariableType.floatArray, ArrayVariableType.boolArray, ArrayVariableType.decimalArray, ArrayVariableType.byteArray, ArrayVariableType.sbyteArray, ArrayVariableType.objArray, ArrayVariableType.stringBuilderArray];
     }
 }
