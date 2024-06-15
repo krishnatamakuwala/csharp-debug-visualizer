@@ -1,10 +1,13 @@
+import { workspace } from "vscode";
+import { ErrorMessage } from "../Enums/Message";
+
 /**
  * Configuration of web-view provided by user 
  */
 class Configuration {
     public static totalPage = 0;
     public static currentPage = 1;
-    public static theme = "test";
+    public static colorTheme = "#76ABAE";
 }
 
 /**
@@ -23,8 +26,17 @@ class Themes {
     /**
      * Get hex code for current theme
      */
-    public static getHexCode(themeName: string) {
-        Themes.themes.filter(x => x.themeName === themeName)[0].hexCode;
+    public static configureTheme() {
+        const colorThemeName: string | undefined = workspace.getConfiguration("charpDebugVisualizer").get("colorTheme");
+        if (colorThemeName === undefined) {
+            throw Error(ErrorMessage.invalidTheme);
+        }
+        const colorTheme = Themes.themes.filter(x => x.themeName === colorThemeName)[0].hexCode;
+        if (colorTheme === undefined || colorTheme === null) {
+            throw Error(ErrorMessage.invalidTheme);
+        } else {
+            Configuration.colorTheme = colorTheme;
+        }
     }
 }
 

@@ -20,6 +20,7 @@ class ErrorMessage {
     public static readonly editorNotExists = "Editor does not exists!";
     public static readonly customDebugAdapaterNotFound = "Custom Debug Adapter could not b found!";
     public static readonly undefinedSession = "Session is undefined or active stack frame for current session could not be found!";
+    public static readonly invalidTheme = "Theme is not valid!";
 }
 
 export {

@@ -12,6 +12,19 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": [
+      {
+        "title": "C# Debug Visualizer",
+        "properties": {
+          "charpDebugVisualizer.colorTheme": {
+            "type": "string",
+            "description": "Choose color theme according to your preference.",
+            "default": "Oceanic Breeze",
+            "enum": ["Oceanic Breeze", "Carbon Mist", "Dreamscapes", "Rosy Blush", "Spring Serenity", "Sunburst Glow"]
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "typescript-test-extension-2.helloWorld",
