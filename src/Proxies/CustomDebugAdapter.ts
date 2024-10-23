@@ -1,7 +1,6 @@
-import { DebugSession, debug } from "vscode";
+import { DebugSession, DebugStackFrame, DebugThread, debug } from "vscode";
 import { DebugProxy } from "./DebugProxy";
 import { DebugSessionDetails } from "./DebugSessionDetails";
-import { Disposable } from "vscode";
 
 export class CustomDebugAdapter {
     private _activeSession: DebugSessionDetails | undefined;
@@ -13,12 +12,21 @@ export class CustomDebugAdapter {
         return this._activeSession;
     }
 
+    /**
+     * Custom Debug Adapter object to send requests to debug adapter protocol
+     * @param debugProxy 
+     */
     constructor (private debugProxy: DebugProxy) {
         debug.onDidChangeActiveDebugSession(activeDebugSession => {
             this.updateActiveSession(activeDebugSession);
         });
 
+        debug.onDidChangeActiveStackItem(activeStackItem => {
+            this.updateActiveStackFrame(activeStackItem);
+        });
+
         this.updateActiveSession(debug.activeDebugSession);
+        this.updateActiveStackFrame(debug.activeStackItem);
     }
 
     /**
@@ -34,25 +42,9 @@ export class CustomDebugAdapter {
     /**
      * Get active stack frame based on active debug session
      */
-    public async getActiveStackFrame() {
-        var isNew = true;
-        if (this.activeSession !== undefined) {
-            if (isNew) {
-                this.activeSession.activeStackFrameId = 1000;
-            } else {
-                const threads = await this.activeSession.getThreads();
-                var stackTrace;
-                await Promise.all(threads.map(async (thread) => {
-                    if (this.activeSession !== undefined && this.activeSession.activeStackFrameId === undefined)
-                    {
-                        stackTrace = await this.activeSession.getStackTrace(thread.id, 0);
-                        if (stackTrace.totalFrames !== undefined && stackTrace.totalFrames > 0 && this.activeSession.activeStackFrameId === undefined)
-                        {
-                            this.activeSession.activeStackFrameId = stackTrace.stackFrames.find(x => x.id === 1000)?.id;
-                        }
-                    }
-                }));
-            }
+    public async updateActiveStackFrame(activeStackItem: DebugThread | DebugStackFrame | undefined) {
+        if (this.activeSession !== undefined && activeStackItem instanceof DebugStackFrame) {
+            this.activeSession.activeStackFrameId = activeStackItem.frameId;
         }
     }
 

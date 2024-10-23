@@ -29,7 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 			//#region Get session and active stack frame
 			customDebugAdapter = new CustomDebugAdapter(new DebugProxy);
-			await customDebugAdapter.getActiveStackFrame();
 			session = customDebugAdapter.activeSession;
 			//#endregion
 			
