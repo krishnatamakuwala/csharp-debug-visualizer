@@ -283,7 +283,14 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 	}
 	else if(variableType == "System.Data.DataTable")
 	{
-		resultWebContent = `
+		if (result.Columns.Count == 0) {
+			resultWebContent = `
+				<div>
+					Datatable is empty, could not found columns or rows data.
+				</div>
+			`;
+		} else {
+			resultWebContent = `
 				<div>
 					<h3>Variable Name : ${selectedVariable}</h3>
 					<p>Column Count : ${result.Columns.Count}</p>
@@ -292,12 +299,12 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 					<div style="display: flex;">
 						<p style="margin-top: 0px">Current Page : </p>
 						<select id="ddlPages" class="ddlPages" onchange="getPaginatedData(this)" style="margin-bottom: 10px;">`;
-		for(var page = 1; page <= totalPage; page++)
-		{
-			let optionString = `<option value="${page}">${page}</option>`;
-			resultWebContent += optionString;
-		}
-		resultWebContent +=	`
+			for(var page = 1; page <= totalPage; page++)
+			{
+				let optionString = `<option value="${page}">${page}</option>`;
+				resultWebContent += optionString;
+			}
+			resultWebContent +=	`
 						</select>
 						<p style="margin-top: 0px"><i> (Record per page : 25)</i></p>
 					</div>
@@ -305,35 +312,48 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 						<thead>
 							<tr>
 								<th>Sr. No.</th>`;
-		result.Columns.List.forEach(column => {
-			let columnString = '<th>' + utilities.getCustomParsedString(column) + '</th>';
-			resultWebContent += columnString;
-		});
-		resultWebContent += `
+			result.Columns.List.forEach(column => {
+				let columnString = '<th>' + utilities.getCustomParsedString(column) + '</th>';
+				resultWebContent += columnString;
+			});
+			resultWebContent += `
 							</tr>
 						</thead>
 						<tbody>
-		`;
+			`;
 
-		let i = ((currentPage - 1) * 25) + 1;
-		result.Rows.List.forEach(row => {
-			resultWebContent += '<tr>';
-			resultWebContent += `<td>${i}.</td>`;
-			row.forEach(rowData => {
-				let rowDataString = '<td>' + utilities.getCustomParsedString(rowData) + '</td>';
-				resultWebContent += rowDataString;
-			});
-			resultWebContent += '</tr>';
-			i++;
-		});
+			if (result.Rows.Count === 0) {
+				let i = ((currentPage - 1) * 25) + 1;
+				result.Rows.List.forEach(row => {
+					resultWebContent += '<tr>';
+					resultWebContent += `<td>${i}.</td>`;
+					row.forEach(rowData => {
+						let rowDataString = '<td>' + utilities.getCustomParsedString(rowData) + '</td>';
+						resultWebContent += rowDataString;
+					});
+					resultWebContent += '</tr>';
+					i++;
+				});
 
-		resultWebContent += `
+				resultWebContent += `
 						</tbody>
 					</table>
 					</br></br>
 					<i>> Note: Sr. No. is a Serial Number and it is not included in datatable. It is only provided for better readability!</i>
+				`;
+			} else {
+				resultWebContent += `
+						<tbody>
+							<td colspan=${result.Columns.Count + 1}>There are no records.</td>
+						</tbody>
+					</table>
+					</br></br>
+				`;
+			}
+			resultWebContent += `
 				</div>
-		`
+			`;
+		}
 	}
 	else
 	{
@@ -445,25 +465,38 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 				var popup = document.getElementById("popup-message");
 				var message = "Saved";
 				var csvData = '';
-				csvData += '${result.Columns.List.map(x => { return utilities.getCustomParsedString(x); }).toString()}\\n';`;
+		`;
 
-		result.Rows.List.forEach(rows => {
+		if (result.Columns.Count !== 0) {
 			scriptWebContent += `
-				csvData += '${rows.toString()}\\n';
-			`
-		});
+				csvData += '${result.Columns.List.map(x => { return utilities.getCustomParsedString(x); }).toString()}\\n';
+			`;
 
-		scriptWebContent +=	`
-				// Download the CSV file
-				let anchor = document.createElement('a');
-				anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvData);
-				anchor.target = '_blank';
-				anchor.download = 'DataTable.csv';
-				anchor.click();
-				
-				handlePopupMessage(popup, message);
+			if (result.Rows.Count === 0) {
+				result.Rows.List.forEach(rows => {
+					scriptWebContent += `
+						csvData += '${rows.toString()}\\n';
+					`
+				});
 			}
-		`
+	
+			scriptWebContent +=	`
+					// Download the CSV file
+					let anchor = document.createElement('a');
+					anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvData);
+					anchor.target = '_blank';
+					anchor.download = 'DataTable.csv';
+					anchor.click();
+					
+					handlePopupMessage(popup, message);
+				}
+			`
+		} else {
+			scriptWebContent += `
+					handlePopupMessage(popup, "DataTable is empty.");
+				}
+			`;
+		}
 	}
 
 	scriptWebContent += `

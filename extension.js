@@ -291,19 +291,23 @@ async function getRowsOfDataTable(session, res, dataTable, recordPerPage, curren
 
 	resForRowList = await getPaginatedData(session, resForRowList, currentPage);
 	var rows = [];
-	await Promise.all(resForRowList.variables.map(async (rowVariable) => {
-		var row = await session.customRequest('variables', { variablesReference: rowVariable.variablesReference });
-		rows.push(row);
-	}));
-
-	var rowsItemVariableRef = rows.map(row => { return row.variables }).map(row => { return row.filter(x => x.name.includes('ItemArray'))[0].variablesReference });
-	var rowItemArray = [];
-	await Promise.all(rowsItemVariableRef.map(async (rowItem) => {
-		var rowItem = await session.customRequest('variables', { variablesReference: rowItem });
-		rowItemArray.push(rowItem);
-	}));
-
-	res.Rows.List = await Promise.all(rowItemArray.map(async (row) => { row = await getMoreDataIfAny(session, row); return row.variables.map(rowItem =>  { return rowItem.value }) }));
+	if (resForRowList.variables[0].name !== 'Empty [string]') {
+		await Promise.all(resForRowList.variables.map(async (rowVariable) => {
+			var row = await session.customRequest('variables', { variablesReference: rowVariable.variablesReference });
+			rows.push(row);
+		}));
+	
+		var rowsItemVariableRef = rows.map(row => { return row.variables }).map(row => { return row.filter(x => x.name.includes('ItemArray'))[0].variablesReference });
+		var rowItemArray = [];
+		await Promise.all(rowsItemVariableRef.map(async (rowItem) => {
+			var rowItem = await session.customRequest('variables', { variablesReference: rowItem });
+			rowItemArray.push(rowItem);
+		}));
+	
+		res.Rows.List = await Promise.all(rowItemArray.map(async (row) => { row = await getMoreDataIfAny(session, row); return row.variables.map(rowItem =>  { return rowItem.value }) }));
+	} else {
+		res.Rows.List = [];
+	}
 	return res;
 }
 
