@@ -322,7 +322,7 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 						<tbody>
 			`;
 
-			if (result.Rows.Count === 0) {
+			if (result.Rows.Count != 0) {
 				let i = ((currentPage - 1) * 25) + 1;
 				result.Rows.List.forEach(row => {
 					resultWebContent += '<tr>';
@@ -339,7 +339,6 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 						</tbody>
 					</table>
 					</br></br>
-					<i>> Note: Sr. No. is a Serial Number and it is not included in datatable. It is only provided for better readability!</i>
 				`;
 			} else {
 				resultWebContent += `
@@ -351,6 +350,7 @@ function getWebViewContent(primaryColor, selectedVariable, result, variableType,
 				`;
 			}
 			resultWebContent += `
+					<i>> Note: Sr. No. is a Serial Number and it is not included in datatable. It is only provided for better readability!</i>
 				</div>
 			`;
 		}
