@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
   },
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": {
     "name": "Krishna Tamakuwala & Piyush Katariya",
     "email": "krishna02122001@gmail.com"
@@ -60,7 +60,7 @@
         }
       ]
     },
-    "keybindings":[
+    "keybindings": [
       {
         "command": "csharp-debug-visualizer.visualize",
         "key": "Shift+Alt+V",
@@ -79,17 +79,17 @@
     "test-compile": "tsc -p ./"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.82.0",
-    "@vscode/test-electron": "^2.3.4",
-    "esbuild": "^0.19.5",
-    "eslint": "^8.47.0",
-    "glob": "^10.3.3",
-    "mocha": "^10.2.0",
-    "typescript": "^5.1.6"
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^16.18.121",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.19.12",
+    "eslint": "^8.57.1",
+    "glob": "^10.4.5",
+    "mocha": "^10.8.2",
+    "typescript": "^5.7.2"
   },
   "dependencies": {
-    "npm": "^10.2.3"
+    "npm": "^10.9.2"
   }
 }
