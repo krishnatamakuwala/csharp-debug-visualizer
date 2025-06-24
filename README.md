@@ -61,11 +61,7 @@ This extension is supported only for basic variables like `Integer, Character, S
 
 ## Release Notes
 
-This are our version details.
-
-### 1.0.4
-
-The initial release of this extension supports basic variable types, including DataTable.
+Check **CHANGELOG** for release details.
 
 ---
 
@@ -73,5 +69,3 @@ The initial release of this extension supports basic variable types, including D
 - [Krishna Tamakuwala](https://github.com/krishnatamakuwala)
 
 - [Piyush Katariya](https://github.com/PiyushKatariya)
-
-**Enjoy!**
