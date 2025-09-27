@@ -4,9 +4,12 @@
 export class Variable {
     varName: string = "";
     type: string = "";
-    result: string = "";
+    result: string | DataTable = "";
+}
+
+class DataTable {
     columns: Columns | null = null;
-    rows: Rows | null = null;
+    row: Rows | null = null;
 }
 
 class Columns {

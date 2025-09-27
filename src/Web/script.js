@@ -1,6 +1,6 @@
 //#region Initialzation
-var genericTypeName = document.getElementById("generic-type-name");
-var genericTypeResult = document.getElementById("generic-type-result");
+var genericName = document.getElementById("generic-name");
+var genericResult = document.getElementById("generic-result");
 
 var btnWordWrap = document.getElementById("btn-word-wrap");
 var btnCopy = document.getElementById("btn-copy");
@@ -19,47 +19,54 @@ getData();
 
 //#region Listners
 window.addEventListener("message", (event) => {
-  console.log(event);
-  const message = event.data; // The JSON data our extension sent
-  switch (message.command) {
-    case "setData":
-      genericTypeName.innerHTML = message.data.varName;
-      genericTypeResult.innerHTML = message.data.result;
-      setData();
-      break;
-  }
+    const message = event.data; // The JSON data our extension sent
+    switch (message.command) {
+        case "setData":
+            genericName.innerHTML = message.data.varName;
+            genericResult.innerHTML = message.data.result;
+            setData();
+            break;
+    }
 });
 
 btnWordWrap.addEventListener("click", function () {
-  console.log(genericTypeResult.style);
+    wrapText();
 });
 
 btnCopy.addEventListener("click", function () {
-  copyToClipBoard();
+    copyToClipBoard();
 });
 
 iconClose.addEventListener("click", function () {
-  clearTimeout(popupTimeout);
-  closePopup();
+    clearTimeout(popupTimeout);
+    closePopup();
 });
 //#endregion
 
-function setData() {}
+function setData() { }
 
 //#region Control - Functions
 function copyToClipBoard() {
-  var result = genericTypeResult.innerHTML;
-  var message = "Copied to clipboard.";
-  var status = "success";
+    var result = genericResult.innerHTML;
+    var message = "Copied to clipboard.";
+    var status = "success";
 
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(result);
-  } else {
-    message = "Error while copying to clipboard.";
-    status = "error";
-  }
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(result);
+    } else {
+        message = "Error while copying to clipboard.";
+        status = "error";
+    }
 
-  showNotification(message, status, true);
+    showNotification(message, status, true);
+}
+
+function wrapText() {
+    if (genericResult.style.whiteSpace === "normal") {
+        genericResult.style.whiteSpace = "nowrap"
+    } else {
+        genericResult.style.whiteSpace = "normal"
+    }
 }
 //#endregion
 
@@ -84,8 +91,7 @@ function showNotification(message, type, isAutoClosable) {
 
 function closePopup() {
     popupContainer.classList.toggle("show");
-    setTimeout(function()
-    {
+    setTimeout(function () {
         popupContainer.classList.remove("success");
         popupContainer.classList.remove("error");
         iconSuccess.style.display = "none";
@@ -95,6 +101,6 @@ function closePopup() {
 
 function getData() {
     vscode.postMessage({
-      command: "getData",
+        command: "getData",
     });
 }

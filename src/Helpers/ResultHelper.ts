@@ -1,4 +1,4 @@
-import { Progress } from "vscode";
+import { DebugSession, Progress } from "vscode";
 import { ErrorMessage } from "../Enums/Message";
 import { Variable } from "../Models/Variable";
 import { CustomDebugAdapter } from "../Proxies/CustomDebugAdapter";
@@ -6,6 +6,10 @@ import { DebugSessionDetails } from "../Proxies/DebugSessionDetails";
 import { RequestStatusType } from "../Enums/RequestStatusType";
 import { ArrayVariableType, DataTable, SingleVariableType } from "../Enums/VariableType";
 import { RequestStatus, ProgressTracker } from "../Models/RequestProgressStatus";
+import { SingleTypeResultProvider } from "../Provider/Result/SingleTypeResultProvider";
+import { ArrayTypeResultProvider } from "../Provider/Result/ArrayTypeResultProvider";
+import { DataColumnTypeResultProvider } from "../Provider/Result/DataColumnTypeResultProvider";
+import { DataRowTypeResultProvider } from "../Provider/Result/DataRowTypeResultProvider";
 
 export class ResultHelper {
 
@@ -15,14 +19,13 @@ export class ResultHelper {
      * @param session Object of debug session details 
      * @param {Progress} progress Progress class to track and manage progress
      */
-    public static async getResult(customDebugAdapter: CustomDebugAdapter | undefined, session: DebugSessionDetails | undefined, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
+    public static async getResult(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails | undefined, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
         try {
-            if (customDebugAdapter === undefined) {
-                throw ErrorMessage.customDebugAdapaterNotFound;
-            }
             if (session === undefined) {
                 throw ErrorMessage.undefinedSession;
             }
+
+            let resultProvider: SingleTypeResultProvider | ArrayTypeResultProvider | DataColumnTypeResultProvider;
 
             progress.report({ increment: (10 - ProgressTracker.progress) });
             ProgressTracker.progress = 10;
@@ -42,25 +45,27 @@ export class ResultHelper {
 
             //#region Get value for selected variable
             if (SingleVariableType.typeArray.includes(variable.type)) {
-                variable.result = await variablesList.filter((x: { evaluateName: string; }) => x.evaluateName === variable.varName)[0].value;
+                resultProvider = new SingleTypeResultProvider(variable.varName, variablesList);
+                variable.result = await resultProvider.getResult();
             }
             else if (ArrayVariableType.typeArray.includes(variable.type)) {
-                let varRef = await variablesList.filter((x: { evaluateName: string; }) => x.evaluateName === variable.varName)[0].variablesReference;
-                await this.getArrayVariableResult(varRef, session, variable, null, progress);
+                resultProvider = new ArrayTypeResultProvider(variable.varName, variablesList, session, null, false, progress);
+                variable.result = await resultProvider.getResult();
             }
             else if (variable.type === DataTable.dataColumn) {
-                var verRef = await variablesList.filter((x: { evaluateName: string; }) => x.evaluateName === variable.varName)[0].variablesReference;
-                var varResponse = await session.getVariables(verRef, 0);
-                // variable.result = varResponse.filter(x => x.evaluateName === `${variable.varName}.ColumnName`)[0].value;
-                await this.getArrayVariableResult(verRef, session, variable, 'ColumnName', progress);
+                resultProvider = new DataColumnTypeResultProvider(variable.varName, variablesList, session);
+                variable.result = await resultProvider.getResult();
             }
             else if (variable.type === DataTable.dataRow) {
-                let varRef = await variablesList.filter((x: { evaluateName: string; }) => x.evaluateName === variable.varName)[0].variablesReference;
-                let dataRow = await session.getVariables(varRef, 0);
-                varRef = dataRow.filter(x => x.evaluateName === `${variable.varName}.ItemArray`)[0].variablesReference;
-                await this.getArrayVariableResult(varRef, session, variable, 'ItemArray', progress);
-                // var rowsItemVariableRef = dataRow.filter((x: { evaluateName: string; }) => x.evaluateName === `${variable.varName}.RowName`)[0].variablesReference;
-                // await this.getArrayVariableResult(rowsItemVariableRef, session, variable, progress);
+                resultProvider = new DataRowTypeResultProvider(variable.varName, variablesList, session, progress);
+                variable.result = await resultProvider.getResult();
+            }
+            else {
+                resultProvider = new SingleTypeResultProvider(variable.varName, variablesList);
+                variable.result = await resultProvider.getResult();
+                if (variable.result === "null") {
+                    variable.type === "null";
+                }
             }
             //#endregion
 
@@ -111,8 +116,7 @@ export class ResultHelper {
         let totalPage = Math.ceil(childCount / countPerPage);
         while (currentPage + 1 <= totalPage) {
             var varResult = (await session.getVariables(variablesReference, (currentPage * countPerPage), countPerPage)).map(x => { return x.value; });
-            if (currentPage + 1 !== totalPage)
-            {
+            if (currentPage + 1 !== totalPage) {
                 varResult.pop();
             }
             variable.result = variable.result + (currentPage === 0 ? "" : ", ") + varResult.join(", ");

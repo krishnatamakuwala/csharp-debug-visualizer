@@ -1,6 +1,6 @@
 import { DebugSession, DebugStackFrame, DebugThread, debug } from "vscode";
 import { DebugProxy } from "./DebugProxy";
-import { DebugSessionDetails } from "./DebugSessionDetails";
+import { DebugSessionDetails, IScope, IVariable } from "./DebugSessionDetails";
 
 export class CustomDebugAdapter {
     private _activeSession: DebugSessionDetails | undefined;
@@ -51,11 +51,11 @@ export class CustomDebugAdapter {
     /**
      * Get parent variable list or first level variables
      */
-    public async getParentVariablesList(): Promise<any> {
-        var parentVariableList: any = [];
+    public async getParentVariablesList(): Promise<IVariable[]> {
+        var parentVariableList: IVariable[] = [];
         if (this.activeSession !== undefined && this.activeSession.activeStackFrameId !== undefined)
         {
-            const scopes = await this.activeSession.getScopes(this.activeSession.activeStackFrameId);
+            const scopes: IScope[] = await this.activeSession.getScopes(this.activeSession.activeStackFrameId);
             parentVariableList = await this.activeSession.getVariables(scopes[0].variablesReference, 0 ,0);
         }
         return parentVariableList;

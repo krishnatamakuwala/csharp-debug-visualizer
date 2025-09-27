@@ -20,7 +20,6 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		RequestStatus.status = RequestStatusType.started;
 
-		let customDebugAdapter: CustomDebugAdapter | undefined;
 		let session: DebugSessionDetails | undefined;
 		var variable = new Variable();
 		ProgressTracker.progress = 0;
@@ -28,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 			RequestStatus.status = RequestStatusType.inProgress;
 
 			//#region Get session and active stack frame
-			customDebugAdapter = new CustomDebugAdapter(new DebugProxy);
+			const customDebugAdapter: CustomDebugAdapter = new CustomDebugAdapter(new DebugProxy);
 			session = customDebugAdapter.activeSession;
 			//#endregion
 			
