@@ -123,13 +123,15 @@ body.vscode-dark {
   flex-grow: 1;
 }
 
-.generic-type-container {
+.generic-container {
   display: flex;
   gap: 0px 10px;
 }
 
 .result {
-  white-space: pre;
+  white-space: nowrap;
+  font-family: 'Roboto Mono', monospace;
+  color: burlywood;
 }
 /*#endregion*/
 

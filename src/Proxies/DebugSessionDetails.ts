@@ -127,12 +127,12 @@ interface IStackFrame {
 	source: { name: string; path: string };
 }
 
-interface IScope {
+export interface IScope {
     name: string;
     variablesReference: number;
 }
 
-interface IVariable {
+export interface IVariable {
     name: string;
     value: string;
     evaluateName?: string;
