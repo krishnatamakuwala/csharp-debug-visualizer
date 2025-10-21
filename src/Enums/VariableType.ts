@@ -80,9 +80,14 @@ class DataTable {
     public static readonly dataRow = "System.Data.DataRow";
     public static readonly dataTable = "System.Data.DataTable";
 }
+
+class Default {
+    public static readonly null = "null";
+}
  
 export {
     SingleVariableType,
     ArrayVariableType,
-    DataTable
+    DataTable,
+    Default
 };

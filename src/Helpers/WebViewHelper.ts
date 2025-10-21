@@ -1,6 +1,6 @@
 import { ExtensionContext, Uri, ViewColumn, window } from "vscode";
 import { readFileSync } from "fs";
-import { Variable } from "../Models/Variable";
+import { DataTableConfig, Variable } from "../Models/Variable";
 import { Configuration } from "../Models/Configuration";
 import path = require("path");
 
@@ -25,6 +25,9 @@ export class WebViewHelper {
             message => {
                 switch (message.command) {
                     case "getData":
+                        if (message.text) {
+                            const config: DataTableConfig = JSON.parse(message.text);
+                        }
                         panel.webview.postMessage({ command: 'setData', data: variable });
                         return;
                 }

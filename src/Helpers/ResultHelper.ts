@@ -4,12 +4,13 @@ import { Variable } from "../Models/Variable";
 import { CustomDebugAdapter } from "../Proxies/CustomDebugAdapter";
 import { DebugSessionDetails } from "../Proxies/DebugSessionDetails";
 import { RequestStatusType } from "../Enums/RequestStatusType";
-import { ArrayVariableType, DataTable, SingleVariableType } from "../Enums/VariableType";
+import { ArrayVariableType, DataTable, Default, SingleVariableType } from "../Enums/VariableType";
 import { RequestStatus, ProgressTracker } from "../Models/RequestProgressStatus";
 import { SingleTypeResultProvider } from "../Provider/Result/SingleTypeResultProvider";
 import { ArrayTypeResultProvider } from "../Provider/Result/ArrayTypeResultProvider";
 import { DataColumnTypeResultProvider } from "../Provider/Result/DataColumnTypeResultProvider";
 import { DataRowTypeResultProvider } from "../Provider/Result/DataRowTypeResultProvider";
+import { DataTableTypeResultProvider } from "../Provider/Result/DataTableTypeResultProvider";
 
 export class ResultHelper {
 
@@ -25,7 +26,7 @@ export class ResultHelper {
                 throw ErrorMessage.undefinedSession;
             }
 
-            let resultProvider: SingleTypeResultProvider | ArrayTypeResultProvider | DataColumnTypeResultProvider;
+            let resultProvider: SingleTypeResultProvider | ArrayTypeResultProvider | DataColumnTypeResultProvider | DataRowTypeResultProvider | DataTableTypeResultProvider;
 
             progress.report({ increment: (10 - ProgressTracker.progress) });
             ProgressTracker.progress = 10;
@@ -44,28 +45,32 @@ export class ResultHelper {
             }
 
             //#region Get value for selected variable
-            if (SingleVariableType.typeArray.includes(variable.type)) {
-                resultProvider = new SingleTypeResultProvider(variable.varName, variablesList);
-                variable.result = await resultProvider.getResult();
-            }
-            else if (ArrayVariableType.typeArray.includes(variable.type)) {
-                resultProvider = new ArrayTypeResultProvider(variable.varName, variablesList, session, null, false, progress);
-                variable.result = await resultProvider.getResult();
-            }
-            else if (variable.type === DataTable.dataColumn) {
-                resultProvider = new DataColumnTypeResultProvider(variable.varName, variablesList, session);
-                variable.result = await resultProvider.getResult();
-            }
-            else if (variable.type === DataTable.dataRow) {
-                resultProvider = new DataRowTypeResultProvider(variable.varName, variablesList, session, progress);
-                variable.result = await resultProvider.getResult();
-            }
-            else {
-                resultProvider = new SingleTypeResultProvider(variable.varName, variablesList);
-                variable.result = await resultProvider.getResult();
-                if (variable.result === "null") {
-                    variable.type === "null";
+            if (variable.type === Default.null) {
+                variable.result = Default.null;
+            } else {
+                if (SingleVariableType.typeArray.includes(variable.type)) {
+                    resultProvider = new SingleTypeResultProvider(variable.varName, variablesList, null, ResultHelper.checkIfRequestIsCancelled);
                 }
+                else if (ArrayVariableType.typeArray.includes(variable.type)) {
+                    resultProvider = new ArrayTypeResultProvider(variable.varName, variablesList, session, null, false, progress, ResultHelper.checkIfRequestIsCancelled);
+                }
+                else if (variable.type === DataTable.dataColumn) {
+                    resultProvider = new DataColumnTypeResultProvider(variable.varName, variablesList, session, ResultHelper.checkIfRequestIsCancelled);
+                }
+                else if (variable.type === DataTable.dataRow) {
+                    resultProvider = new DataRowTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled);
+                }
+                else if (variable.type === DataTable.dataTable) {
+                    resultProvider = new DataTableTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled);
+                }
+                else {
+                    resultProvider = new SingleTypeResultProvider(variable.varName, variablesList, null, ResultHelper.checkIfRequestIsCancelled);
+                }
+                const result = await resultProvider.getResult();
+                if (result === RequestStatusType.cancelled) {
+                    return RequestStatusType.cancelled;
+                }
+                variable.result = result;
             }
             //#endregion
 
@@ -99,7 +104,7 @@ export class ResultHelper {
         if (session.activeStackFrameId === undefined) {
             throw ErrorMessage.undefinedSession;
         }
-        return parseInt((await session.evaluateExpression(`${variableName}.Count()`, session.activeStackFrameId, "variables")).result);
+        return parseInt((await session.evaluateExpression(`${variableName}.Count()`, session.activeStackFrameId, "variables")).result as string);
     }
 
     /**

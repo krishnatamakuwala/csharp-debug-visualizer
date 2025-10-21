@@ -38,12 +38,25 @@ export class Editor {
     }
 
     /**
-     * Remove leading and trailling {} or ""
+     * Remove leading and trailling ""
      * @param str Input string
      * @returns Lead and trail removed string
      */
-    public static getCustomParsedString(str: string) {
-        if((str.startsWith("{") && str.endsWith("}")) || (str.startsWith("\"") && str.endsWith("\"")))
+    public static removeLeadingAndTrailingQuotes(str: string) {
+        if(str.startsWith("\"") && str.endsWith("\""))
+        {
+            str = str.slice(1, -1);
+        }
+        return str;
+    }
+
+    /**
+     * Remove leading and trailling {}
+     * @param str Input string
+     * @returns Lead and trail removed string
+     */
+    public static removeLeadingAndTrailingCBraces(str: string) {
+        if(str.startsWith("{") && str.endsWith("}"))
         {
             str = str.slice(1, -1);
         }

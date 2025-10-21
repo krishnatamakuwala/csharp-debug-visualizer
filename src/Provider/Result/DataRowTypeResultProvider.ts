@@ -6,27 +6,33 @@ import { CommonResultProvider } from "./CommonResultProvider";
 import { IResultProvider } from "./IResultProvider";
 import { SingleTypeResultProvider } from "./SingleTypeResultProvider";
 import { ArrayTypeResultProvider } from "./ArrayTypeResultProvider";
+import { RequestStatusType } from "../../Enums/RequestStatusType";
 
 export class DataRowTypeResultProvider implements IResultProvider {
 
-    variableName: string;
-    variableList: IVariable[];
-    session: DebugSessionDetails;
-    commonResultProvider: CommonResultProvider;
-    progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>;
+    _variableName: string;
+    _variableList: IVariable[];
+    _session: DebugSessionDetails;
+    _commonResultProvider: CommonResultProvider;
+    _progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>;
+    _cancellationToken: () => boolean;
 
-    constructor(_variableName: string, _variableList: IVariable[], _session: DebugSessionDetails, _progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
-        this.variableName = _variableName;
-        this.variableList = _variableList;
-        this.session = _session;
-        this.commonResultProvider = new CommonResultProvider(this.variableName, this.variableList);
-        this.progress = _progress;
+    constructor(variableName: string, variableList: IVariable[], session: DebugSessionDetails, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>, cancellationToken: () => boolean) {
+        this._variableName = variableName;
+        this._variableList = variableList;
+        this._session = session;
+        this._commonResultProvider = new CommonResultProvider(this._variableName, this._variableList);
+        this._progress = progress;
+        this._cancellationToken = cancellationToken;
     }
 
-    async getResult(): Promise<string> {
-        const varRef = this.commonResultProvider.getVariableReference();
-        var childResponse = await this.session.getVariables(varRef, 0);
-        const arrayTypeResultProvider = new ArrayTypeResultProvider(this.variableName, childResponse, this.session, "ItemArray", false, this.progress);
+    async getResult(): Promise<string | RequestStatusType.cancelled> {
+        if (this._cancellationToken()) {
+            return RequestStatusType.cancelled;
+        }
+        const varRef = this._commonResultProvider.getVariableReference();
+        const childResponse = await this._session.getVariables(varRef, 0);
+        const arrayTypeResultProvider = new ArrayTypeResultProvider(this._variableName, childResponse, this._session, "ItemArray", false, this._progress, this._cancellationToken);
         const result = await arrayTypeResultProvider.getResult();
         return result;
     }

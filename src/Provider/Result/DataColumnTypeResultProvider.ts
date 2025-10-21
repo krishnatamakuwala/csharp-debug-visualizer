@@ -5,28 +5,47 @@ import { DebugSessionDetails, IVariable } from "../../Proxies/DebugSessionDetail
 import { CommonResultProvider } from "./CommonResultProvider";
 import { IResultProvider } from "./IResultProvider";
 import { SingleTypeResultProvider } from "./SingleTypeResultProvider";
+import { Editor } from "../../Utilities/Editor";
+import { RequestStatusType } from "../../Enums/RequestStatusType";
 
 export class DataColumnTypeResultProvider implements IResultProvider {
 
-    variableName: string;
-    variableList: IVariable[];
-    session: DebugSessionDetails;
-    commonResultProvider: CommonResultProvider;
+    _variableName: string;
+    _variableList: IVariable[];
+    _session: DebugSessionDetails;
+    _commonResultProvider: CommonResultProvider;
+    _isColumnTypeIncluded: boolean;
+    _cancellationToken: () => boolean;
 
-    constructor(_variableName: string, _variableList: IVariable[], _session: DebugSessionDetails) {
-        this.variableName = _variableName;
-        this.variableList = _variableList;
-        this.session = _session;
-        this.commonResultProvider = new CommonResultProvider(this.variableName, this.variableList);
+    constructor(variableName: string, variableList: IVariable[], session: DebugSessionDetails, cancellationToken: () => boolean, isColumnTypeIncluded: boolean = true) {
+        this._variableName = variableName;
+        this._variableList = variableList;
+        this._session = session;
+        this._commonResultProvider = new CommonResultProvider(this._variableName, this._variableList);
+        this._isColumnTypeIncluded = isColumnTypeIncluded;
+        this._cancellationToken = cancellationToken;
     }
 
-    async getResult(): Promise<string> {
-        const varRef = this.commonResultProvider.getVariableReference();
-        var childResponse = await this.session.getVariables(varRef, 0);
-        const singleTypeResultProvider = new SingleTypeResultProvider(this.variableName, childResponse, "ColumnName");
+    async getResult(): Promise<string | RequestStatusType.cancelled> {
+        if (this._cancellationToken()) {
+            return RequestStatusType.cancelled;
+        }
+        const varRef = this._commonResultProvider.getVariableReference();
+        var childResponse = await this._session.getVariables(varRef, 0);
+        const singleTypeResultProvider = new SingleTypeResultProvider(this._variableName, childResponse, "ColumnName", this._cancellationToken);
         const nameResult = await singleTypeResultProvider.getResult();
-        singleTypeResultProvider.childName = "DataType";
-        const typeResult = await singleTypeResultProvider.getResult();
-        return `${nameResult}; ${typeResult.slice(1, -1)}`;
+        if (nameResult === RequestStatusType.cancelled) {
+            return RequestStatusType.cancelled;
+        }
+        let result = nameResult;
+        if (this._isColumnTypeIncluded) {
+            singleTypeResultProvider._childName = "DataType";
+            const typeResult = await singleTypeResultProvider.getResult();
+            if (typeResult === RequestStatusType.cancelled) {
+                return RequestStatusType.cancelled;
+            }
+            result = `${nameResult}; ${Editor.removeLeadingAndTrailingCBraces(typeResult)}`;
+        }
+        return result;
     }
 }
