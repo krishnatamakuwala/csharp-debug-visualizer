@@ -7,17 +7,25 @@ export class Variable {
     result: string | DataTable = "";
 }
 
-class DataTable {
+export class DataTable {
+    tableName: string = "";
+    dataTableConfig: DataTableConfig | null = null;
     columns: Columns | null = null;
-    row: Rows | null = null;
+    rows: Rows | null = null;
 }
 
-class Columns {
-    count: number = 0;
-    list: [] = [];
+export class DataTableConfig {
+    totalPage: number = 0;
+    currentPage: number = 0;
+    recordsPerPage: number = 0;
 }
 
-class Rows {
+export class Columns {
     count: number = 0;
-    list: [] = [];
+    list: string[] = [];
+}
+
+export class Rows {
+    count: number = 0;
+    list: string[][] = [];
 }

@@ -5,9 +5,30 @@ import { ErrorMessage } from "../Enums/Message";
  * Configuration of web-view provided by user 
  */
 class Configuration {
-    public static totalPage = 0;
-    public static currentPage = 1;
+    public static recordsPerPage = 0;
     public static colorTheme = "#76ABAE";
+
+    /**
+     * Configure settings
+     */
+    public static configure() {
+        Themes.configure();
+        RecordsPerPage.configure();
+    }
+}
+
+class RecordsPerPage {
+
+    /**
+     * Configure records per page
+     */
+    public static configure() {
+        const recordsPerPage: number | undefined = workspace.getConfiguration("charpDebugVisualizer").get("recordsPerPage");
+        if (recordsPerPage === undefined) {
+            throw Error(ErrorMessage.invalidRecordsPerPage);
+        }
+        Configuration.recordsPerPage = recordsPerPage;
+    }
 }
 
 /**
@@ -24,9 +45,9 @@ class Themes {
     ];
 
     /**
-     * Get hex code for current theme
+     * Configure hex code for current theme
      */
-    public static configureTheme() {
+    public static configure() {
         const colorThemeName: string | undefined = workspace.getConfiguration("charpDebugVisualizer").get("colorTheme");
         if (colorThemeName === undefined) {
             throw Error(ErrorMessage.invalidTheme);

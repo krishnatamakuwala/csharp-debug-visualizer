@@ -1,20 +1,26 @@
+import { RequestStatusType } from "../../Enums/RequestStatusType";
 import { IVariable } from "../../Proxies/DebugSessionDetails";
 import { IResultProvider } from "./IResultProvider";
 
 export class SingleTypeResultProvider implements IResultProvider {
 
-    variableName: string;
-    variableList: IVariable[];
-    childName: string | null;
+    _variableName: string;
+    _variableList: IVariable[];
+    _childName: string | null;
+    _cancellationToken: () => boolean;
 
-    constructor(_variableName: string, _variableList: IVariable[], _childName: string | null = null) {
-        this.variableName = _variableName;
-        this.variableList = _variableList;
-        this.childName = _childName;
+    constructor(variableName: string, variableList: IVariable[], childName: string | null = null, cancellationToken: () => boolean) {
+        this._variableName = variableName;
+        this._variableList = variableList;
+        this._childName = childName;
+        this._cancellationToken = cancellationToken;
     }
 
-    public async getResult(): Promise<string> {
-        const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
-        return Promise.resolve(this.variableList.filter(x => x.evaluateName === varName)[0].value);
+    public async getResult(): Promise<string | RequestStatusType.cancelled> {
+        if (this._cancellationToken()) {
+            return RequestStatusType.cancelled;
+        }
+        const varName = this._childName !== null ? this._variableName + "." + this._childName : this._variableName;
+        return Promise.resolve(this._variableList.filter(x => x.evaluateName === varName)[0].value);
     }
 }

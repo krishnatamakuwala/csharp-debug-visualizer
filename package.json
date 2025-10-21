@@ -1,14 +1,37 @@
 {
-  "name": "typescript-test-extension-2",
-  "displayName": "typescript-test-extension-2",
-  "description": "",
-  "version": "0.0.1",
+  "name": "csharp-debug-visualizer",
+  "displayName": "C# Debug Visualizer",
+  "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
+  "license": "SEE LICENSE IN LICENSE",
+  "publisher": "KrishnaPiyush",
+  "icon": "logo/csharp-debug-visualizer.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
+  },
+  "version": "1.1.0",
+  "author": {
+    "name": "Krishna Tamakuwala & Piyush Katariya",
+    "email": "krishna02122001@gmail.com"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Other"
+    "Visualization"
   ],
+  "keywords": [
+    "Visualizer",
+    "Datatable",
+    "Data Table",
+    "DataTable",
+    "Debug",
+    "C#",
+    "CSharp",
+    "Watch Table"
+  ],
+  "pricing": "Free",
+  "homepage": "https://github.com/krishnatamakuwala/csharp-debug-visualizer/blob/main/README.md",
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -17,18 +40,54 @@
         "title": "C# Debug Visualizer",
         "properties": {
           "charpDebugVisualizer.colorTheme": {
+            "title": "Color Theme",
             "type": "string",
             "description": "Choose color theme according to your preference.",
             "default": "Oceanic Breeze",
-            "enum": ["Oceanic Breeze", "Carbon Mist", "Dreamscapes", "Rosy Blush", "Spring Serenity", "Sunburst Glow"]
+            "enum": [
+              "Oceanic Breeze",
+              "Carbon Mist",
+              "Dreamscapes",
+              "Rosy Blush",
+              "Spring Serenity",
+              "Sunburst Glow"
+            ]
+          },
+          "charpDebugVisualizer.recordsPerPage": {
+            "title": "Records Per Page",
+            "type": "number",
+            "description": "Choose records per page for datatable variable type according to your preference. The higher number of records per page will take more time to load.",
+            "default": 10,
+            "enum": [
+              5,
+              10,
+              15,
+              20
+            ]
           }
         }
       }
     ],
     "commands": [
       {
-        "command": "typescript-test-extension-2.helloWorld",
-        "title": "Hello World"
+        "command": "csharp-debug-visualizer.visualize",
+        "title": "Visualize"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "csharp-debug-visualizer.visualize",
+          "group": "visualize",
+          "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "csharp-debug-visualizer.visualize",
+        "key": "Shift+Alt+V",
+        "when": "resourceLangId == csharp && debuggersAvailable && inDebugMode"
       }
     ]
   },
@@ -38,7 +97,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "esbuild-base": "esbuild ./out/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap"
   },
   "devDependencies": {
     "@types/vscode": "^1.85.0",

@@ -26,7 +26,6 @@ export class DebugSessionDetails {
             const result = await this._session.customRequest("threads");
             return result.threads as IThread[];
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }
@@ -46,7 +45,6 @@ export class DebugSessionDetails {
             }) as IStackTraceInfo;
             return result;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }
@@ -63,7 +61,6 @@ export class DebugSessionDetails {
             });
             return result.scopes as IScope[];
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }
@@ -84,7 +81,6 @@ export class DebugSessionDetails {
             });
             return result.variables as IVariable[];
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }
@@ -105,7 +101,6 @@ export class DebugSessionDetails {
             }) as IEvaluatedResult;
             return result;
         } catch (error) {
-            console.log(error);
             throw error;
         }
     }
@@ -140,6 +135,6 @@ export interface IVariable {
 }
 
 interface IEvaluatedResult {
-    result: string;
+    result: unknown;
     variablesReference: string;
 }

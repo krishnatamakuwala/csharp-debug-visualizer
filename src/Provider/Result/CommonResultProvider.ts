@@ -37,8 +37,8 @@ export class CommonResultProvider {
             throw ErrorMessage.undefinedSession;
         }
         const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
-        let countFunction = isEnumerable ? "Count()" : "Length";
+        let countFunction = isEnumerable ? "Count" : "Length";
         const count = await session.evaluateExpression(`${varName}.${countFunction}`, session.activeStackFrameId, "variables")
-        return parseInt(count.result);
+        return parseInt(count.result as string);
     }
 }
