@@ -4,7 +4,7 @@ import { CustomDebugAdapter } from './Proxies/CustomDebugAdapter';
 import { Editor } from './Utilities/Editor';
 import { NotificationManager } from './Utilities/NotificationManager';
 import { MessageType } from './Enums/MessageType';
-import { Variable } from './Models/Variable';
+import { DataTableConfig, Variable } from './Models/Variable';
 import { ErrorMessage, InformationMessage, WarningMessage } from './Enums/Message';
 import { ResultHelper } from './Helpers/ResultHelper';
 import { RequestStatusType } from './Enums/RequestStatusType';
@@ -54,54 +54,16 @@ export function activate(context: vscode.ExtensionContext) {
 						//#endregion
 
 						//#region Get result with progress notification bar
-						let processResult = await vscode.window.withProgress({
-							location: vscode.ProgressLocation.Notification,
-							title: InformationMessage.visualizing,
-							cancellable: true
-						}, async (progress, token) => {
-							token.onCancellationRequested(() => {
-								RequestStatus.status = RequestStatusType.cancelled;
-							});
-
-							progress.report({ increment: (5 - ProgressTracker.progress) });
-							ProgressTracker.progress = 5;
-
-							await ResultHelper.getResult(customDebugAdapter, session, variable, progress);
-
-							progress.report({ increment: (100 - ProgressTracker.progress) });
-							ProgressTracker.progress = 100;
-							if (RequestStatus.status === RequestStatusType.inProgress) {
-								RequestStatus.status = RequestStatusType.completed;
-							}
-
-							const p = new Promise<RequestStatusType>((resolve, reject) => {
-								switch (RequestStatus.status) {
-									case RequestStatusType.completed:
-									case RequestStatusType.cancelled:
-										resolve(RequestStatus.status);
-										break;
-									case RequestStatusType.failed:
-										reject();
-										break;
-									default:
-										break;
-								}
-							});
-
-							return p;
-						});
+						const processResult = await withProgress(customDebugAdapter, session, variable);
 						//#endregion
 
 						//#region Create Webview
 						let webViewHelper = new WebViewHelper();
-						webViewHelper.createWebView(context, variable);
+						webViewHelper.createWebView(context, processResult.variable);
 						//#endregion
 
-						if (processResult === RequestStatusType.completed) {
-							NotificationManager.showMessage(InformationMessage.visualized, MessageType.information);
-						} else if (processResult === RequestStatusType.cancelled) {
-							NotificationManager.showMessage(WarningMessage.cancelled, MessageType.warning);
-						}
+						showResultNotification(processResult.requestStatusType);
+
 					} catch (error) {
 						throw error;
 					}
@@ -119,6 +81,91 @@ export function activate(context: vscode.ExtensionContext) {
 	} catch (error) {
 		console.error(error);
 	}
+}
+
+/**
+ * Start VS Code progress with result callback
+ * @param customDebugAdapter Custom debug adapter
+ * @param session Debug session details
+ * @param variable Variable
+ * @returns 
+ */
+export async function withProgress(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails | undefined, variable: Variable, config: DataTableConfig | null = null): Promise<ProcessResult> {
+	let processResult = await vscode.window.withProgress({
+		location: vscode.ProgressLocation.Notification,
+		title: InformationMessage.visualizing,
+		cancellable: true
+	}, async (progress, token) => {
+		token.onCancellationRequested(() => {
+			RequestStatus.status = RequestStatusType.cancelled;
+		});
+
+		progress.report({ increment: (5 - ProgressTracker.progress) });
+		ProgressTracker.progress = 5;
+
+		const result = await ResultHelper.getResult(customDebugAdapter, session, variable, progress, config);
+		if (result !== RequestStatusType.cancelled) {
+			variable = result;
+		}
+
+		progress.report({ increment: (100 - ProgressTracker.progress) });
+		ProgressTracker.progress = 100;
+		if (RequestStatus.status === RequestStatusType.inProgress) {
+			RequestStatus.status = RequestStatusType.completed;
+		}
+
+		const p = new Promise<ProcessResult>((resolve, reject) => {
+			switch (RequestStatus.status) {
+				case RequestStatusType.completed:
+				case RequestStatusType.cancelled:
+					const _processResult: ProcessResult = {
+						requestStatusType: RequestStatus.status,
+						variable: variable
+					}
+					resolve(_processResult);
+					break;
+				case RequestStatusType.failed:
+					reject();
+					break;
+				default:
+					break;
+			}
+		});
+
+		return p;
+	});
+	return processResult;
+}
+
+/**
+ * Show result notification
+ * @param requestStatusType Request status type
+ */
+export function showResultNotification(requestStatusType: RequestStatusType) {
+	if (requestStatusType === RequestStatusType.completed) {
+		NotificationManager.showMessage(InformationMessage.visualized, MessageType.information);
+	} else if (requestStatusType === RequestStatusType.cancelled) {
+		NotificationManager.showMessage(WarningMessage.cancelled, MessageType.warning);
+	}
+}
+
+/**
+ * Get result of variable with provided config
+ * @param config Variable config
+ * @param variable Variable
+ * @returns 
+ */
+export async function getResultWithConfig(config: DataTableConfig, variable: Variable): Promise<Variable> {
+	const customDebugAdapter: CustomDebugAdapter = new CustomDebugAdapter(new DebugProxy);
+	const session: DebugSessionDetails | undefined = customDebugAdapter.activeSession;
+	const processResult = await withProgress(customDebugAdapter, session, variable, config);
+	showResultNotification(processResult.requestStatusType);
+	return processResult.variable;
+}
+
+interface ProcessResult {
+	variable: Variable;
+	requestStatusType: RequestStatusType;
 }
 
 // This method is called when your extension is deactivated

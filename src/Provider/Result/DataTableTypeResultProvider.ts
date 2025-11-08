@@ -132,17 +132,27 @@ export class DataTableTypeResultProvider implements IResultProvider {
         }
 
         const count = await this.getChildCount(childResult, DataTableChildType.Rows);
-        const currentPage = this._dataTableConfig?.currentPage;
+        let currentPage = this._dataTableConfig?.currentPage ?? 1;
         const recordsPerPage = this._dataTableConfig?.recordsPerPage ?? Configuration.recordsPerPage;
         const totalPage = Math.ceil(count / recordsPerPage);
+        if (currentPage % 1 !== 0) {
+            currentPage = Math.ceil(currentPage);
+        }
+        if (currentPage > totalPage) {
+            currentPage = totalPage;
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
         if (count === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
         const batchSize = 5;
-        for (let i = 0; i < Math.min(recordsPerPage, count); i += batchSize) {
-            const batch = Array.from({ length: Math.min(batchSize, count - i) }, (_, j) => i + j);
+        for (let i = 0; i < Math.min(recordsPerPage, count - ((currentPage - 1) * recordsPerPage)); i += batchSize) {
+            const batch = Array.from({ length: Math.min(batchSize, (count - ((currentPage - 1) * recordsPerPage)) - i) }, (_, j) => i + j);
             const batchResult = await Promise.all(
-                batch.map(i => this.getChildList(childResult, DataTableChildType.Rows, 45 / count, null, i))
+                batch.map(k => this.getChildList(childResult, DataTableChildType.Rows, 45 / count, null, ((currentPage - 1) * recordsPerPage) + k))
             );
             if (batchResult.includes(RequestStatusType.cancelled)) {
                 return RequestStatusType.cancelled;
@@ -155,7 +165,7 @@ export class DataTableTypeResultProvider implements IResultProvider {
                 list: rowList
             },
             dataTableConfig: {
-                currentPage: this._dataTableConfig?.currentPage ?? 1,
+                currentPage: currentPage,
                 recordsPerPage: recordsPerPage,
                 totalPage: totalPage
             }
