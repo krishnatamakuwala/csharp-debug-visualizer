@@ -5,7 +5,7 @@ import { ErrorMessage } from "../Enums/Message";
  * Configuration of web-view provided by user 
  */
 class Configuration {
-    public static recordsPerPage = 0;
+    public static recordsPerPage = 10;
     public static colorTheme = "#76ABAE";
 
     /**

@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { DataTableConfig, Variable } from "../Models/Variable";
 import { Configuration } from "../Models/Configuration";
 import path = require("path");
+import { getResultWithConfig } from "../extension";
 
 export class WebViewHelper {
     /**
@@ -26,9 +27,13 @@ export class WebViewHelper {
                 switch (message.command) {
                     case "getData":
                         if (message.text) {
-                            const config: DataTableConfig = JSON.parse(message.text);
+                	        const config: DataTableConfig = JSON.parse(message.text);
+                            getResultWithConfig(config, variable).then((_variable) => {
+                                panel.webview.postMessage({ command: 'setData', data: _variable });
+                            });
+                        } else {
+                            panel.webview.postMessage({ command: 'setData', data: variable });
                         }
-                        panel.webview.postMessage({ command: 'setData', data: variable });
                         return;
                 }
             },

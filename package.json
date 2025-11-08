@@ -39,7 +39,7 @@
       {
         "title": "C# Debug Visualizer",
         "properties": {
-          "charpDebugVisualizer.colorTheme": {
+          "csharpDebugVisualizer.colorTheme": {
             "title": "Color Theme",
             "type": "string",
             "description": "Choose color theme according to your preference.",
@@ -53,7 +53,7 @@
               "Sunburst Glow"
             ]
           },
-          "charpDebugVisualizer.recordsPerPage": {
+          "csharpDebugVisualizer.recordsPerPage": {
             "title": "Records Per Page",
             "type": "number",
             "description": "Choose records per page for datatable variable type according to your preference. The higher number of records per page will take more time to load.",

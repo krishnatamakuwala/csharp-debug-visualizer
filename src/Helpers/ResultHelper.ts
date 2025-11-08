@@ -1,6 +1,6 @@
-import { DebugSession, Progress } from "vscode";
+import { Progress } from "vscode";
 import { ErrorMessage } from "../Enums/Message";
-import { Variable } from "../Models/Variable";
+import { DataTableConfig, Variable } from "../Models/Variable";
 import { CustomDebugAdapter } from "../Proxies/CustomDebugAdapter";
 import { DebugSessionDetails } from "../Proxies/DebugSessionDetails";
 import { RequestStatusType } from "../Enums/RequestStatusType";
@@ -20,7 +20,7 @@ export class ResultHelper {
      * @param session Object of debug session details 
      * @param {Progress} progress Progress class to track and manage progress
      */
-    public static async getResult(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails | undefined, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
+    public static async getResult(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails | undefined, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>, config: DataTableConfig | null): Promise<Variable | RequestStatusType.cancelled> {
         try {
             if (session === undefined) {
                 throw ErrorMessage.undefinedSession;
@@ -31,7 +31,7 @@ export class ResultHelper {
             progress.report({ increment: (10 - ProgressTracker.progress) });
             ProgressTracker.progress = 10;
             if (ResultHelper.checkIfRequestIsCancelled()) {
-                return;
+                return RequestStatusType.cancelled;
             }
 
             //#region Get parent variable or first level variables
@@ -41,7 +41,7 @@ export class ResultHelper {
             progress.report({ increment: (20 - ProgressTracker.progress) });
             ProgressTracker.progress = 20;
             if (ResultHelper.checkIfRequestIsCancelled()) {
-                return;
+                return RequestStatusType.cancelled;
             }
 
             //#region Get value for selected variable
@@ -61,7 +61,7 @@ export class ResultHelper {
                     resultProvider = new DataRowTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled);
                 }
                 else if (variable.type === DataTable.dataTable) {
-                    resultProvider = new DataTableTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled);
+                    resultProvider = new DataTableTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled, config);
                 }
                 else {
                     resultProvider = new SingleTypeResultProvider(variable.varName, variablesList, null, ResultHelper.checkIfRequestIsCancelled);
@@ -76,6 +76,7 @@ export class ResultHelper {
 
             progress.report({ increment: (90 - ProgressTracker.progress) });
             ProgressTracker.progress = 90;
+            return variable;
         } catch (error) {
             RequestStatus.status = RequestStatusType.failed;
             throw error;
@@ -92,44 +93,6 @@ export class ResultHelper {
             return true;
         } else {
             return false;
-        }
-    }
-
-    /**
-     * Get count of child of array or enumerable variable
-     * @param session Active session
-     * @returns Count of child of array or enumerable variable
-     */
-    public static async getCountOfChild(session: DebugSessionDetails, variableName: string): Promise<number> {
-        if (session.activeStackFrameId === undefined) {
-            throw ErrorMessage.undefinedSession;
-        }
-        return parseInt((await session.evaluateExpression(`${variableName}.Count()`, session.activeStackFrameId, "variables")).result as string);
-    }
-
-    /**
-     * Get elements of an array type variable
-     * @param variablesReference Variable reference for child elements
-     * @param session Active session
-     * @param {Progress} progress Progress class to track and manage progress
-     */
-    public static async getArrayVariableResult(variablesReference: number, session: DebugSessionDetails, variable: Variable, customArrayName: string | null, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>) {
-        let variableName = customArrayName !== null ? `${variable.varName}.${customArrayName}` : variable.varName;
-        let countPerPage = customArrayName !== null ? 10 : 20;
-        let childCount = await this.getCountOfChild(session, variableName);
-        let currentPage = 0;
-        let totalPage = Math.ceil(childCount / countPerPage);
-        while (currentPage + 1 <= totalPage) {
-            var varResult = (await session.getVariables(variablesReference, (currentPage * countPerPage), countPerPage)).map(x => { return x.value; });
-            if (currentPage + 1 !== totalPage) {
-                varResult.pop();
-            }
-            variable.result = variable.result + (currentPage === 0 ? "" : ", ") + varResult.join(", ");
-
-            progress.report({ increment: 50 / totalPage });
-            ProgressTracker.progress = ProgressTracker.progress + (50 / totalPage);
-
-            currentPage++;
         }
     }
 }
