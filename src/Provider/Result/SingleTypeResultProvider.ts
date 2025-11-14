@@ -1,5 +1,6 @@
 import { RequestStatusType } from "../../Enums/RequestStatusType";
 import { IVariable } from "../../Proxies/DebugSessionDetails";
+import { CommonResultProvider } from "./CommonResultProvider";
 import { IResultProvider } from "./IResultProvider";
 
 export class SingleTypeResultProvider implements IResultProvider {
@@ -20,7 +21,7 @@ export class SingleTypeResultProvider implements IResultProvider {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;
         }
-        const varName = this._childName !== null ? this._variableName + "." + this._childName : this._variableName;
-        return Promise.resolve(this._variableList.filter(x => x.evaluateName === varName)[0].value);
+        const commonResultProvider = new CommonResultProvider(this._variableName, this._variableList, this._childName, true);
+        return Promise.resolve(commonResultProvider.getValue() as string);
     }
 }

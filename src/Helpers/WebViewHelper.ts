@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { DataTableConfig, Variable } from "../Models/Variable";
 import { Configuration } from "../Models/Configuration";
 import path = require("path");
-import { getResultWithConfig } from "../extension";
+import { getResultWithConfig, refreshData } from "../extension";
 
 export class WebViewHelper {
     /**
@@ -35,6 +35,10 @@ export class WebViewHelper {
                             panel.webview.postMessage({ command: 'setData', data: variable });
                         }
                         return;
+                    case "refreshData":
+                        refreshData(variable).then((_variable) => {
+                            panel.webview.postMessage({ command: 'setData', data: _variable });
+                        });
                 }
             },
             undefined,

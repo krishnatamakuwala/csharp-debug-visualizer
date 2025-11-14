@@ -12,7 +12,7 @@ import { DebugSessionDetails } from './Proxies/DebugSessionDetails';
 import { RequestStatus, ProgressTracker } from './Models/RequestProgressStatus';
 import { WebViewHelper } from './Helpers/WebViewHelper';
 import { Configuration } from './Models/Configuration';
-import { Default } from './Enums/VariableType';
+import { OtherVariableType } from './Enums/VariableType';
 
 // This method is called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
 							throw new Error(errorMessage);
 						}
 						if (variable.type.includes("System.NullReferenceException")) {
-							variable.type = Default.null;
+							variable.type = OtherVariableType.null;
 						}
 						//#endregion
 
@@ -159,6 +159,14 @@ export async function getResultWithConfig(config: DataTableConfig, variable: Var
 	const customDebugAdapter: CustomDebugAdapter = new CustomDebugAdapter(new DebugProxy);
 	const session: DebugSessionDetails | undefined = customDebugAdapter.activeSession;
 	const processResult = await withProgress(customDebugAdapter, session, variable, config);
+	showResultNotification(processResult.requestStatusType);
+	return processResult.variable;
+}
+
+export async function refreshData(variable: Variable) {
+	const customDebugAdapter: CustomDebugAdapter = new CustomDebugAdapter(new DebugProxy);
+	const session: DebugSessionDetails | undefined = customDebugAdapter.activeSession;
+	const processResult = await withProgress(customDebugAdapter, session, variable);
 	showResultNotification(processResult.requestStatusType);
 	return processResult.variable;
 }

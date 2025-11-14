@@ -4,13 +4,14 @@ import { DataTableConfig, Variable } from "../Models/Variable";
 import { CustomDebugAdapter } from "../Proxies/CustomDebugAdapter";
 import { DebugSessionDetails } from "../Proxies/DebugSessionDetails";
 import { RequestStatusType } from "../Enums/RequestStatusType";
-import { ArrayVariableType, DataTable, Default, SingleVariableType } from "../Enums/VariableType";
+import { ArrayVariableType, DataTableVariableType, OtherVariableType, SingleVariableType } from "../Enums/VariableType";
 import { RequestStatus, ProgressTracker } from "../Models/RequestProgressStatus";
 import { SingleTypeResultProvider } from "../Provider/Result/SingleTypeResultProvider";
 import { ArrayTypeResultProvider } from "../Provider/Result/ArrayTypeResultProvider";
 import { DataColumnTypeResultProvider } from "../Provider/Result/DataColumnTypeResultProvider";
 import { DataRowTypeResultProvider } from "../Provider/Result/DataRowTypeResultProvider";
 import { DataTableTypeResultProvider } from "../Provider/Result/DataTableTypeResultProvider";
+import { GenericListTypeResultProvider } from "../Provider/Result/GenericListTypeResultProvider";
 
 export class ResultHelper {
 
@@ -26,7 +27,7 @@ export class ResultHelper {
                 throw ErrorMessage.undefinedSession;
             }
 
-            let resultProvider: SingleTypeResultProvider | ArrayTypeResultProvider | DataColumnTypeResultProvider | DataRowTypeResultProvider | DataTableTypeResultProvider;
+            let resultProvider: SingleTypeResultProvider | ArrayTypeResultProvider | DataColumnTypeResultProvider | DataRowTypeResultProvider | DataTableTypeResultProvider | GenericListTypeResultProvider;
 
             progress.report({ increment: (10 - ProgressTracker.progress) });
             ProgressTracker.progress = 10;
@@ -45,8 +46,8 @@ export class ResultHelper {
             }
 
             //#region Get value for selected variable
-            if (variable.type === Default.null) {
-                variable.result = Default.null;
+            if (variable.type === OtherVariableType.null) {
+                variable.result = OtherVariableType.null;
             } else {
                 if (SingleVariableType.typeArray.includes(variable.type)) {
                     resultProvider = new SingleTypeResultProvider(variable.varName, variablesList, null, ResultHelper.checkIfRequestIsCancelled);
@@ -54,14 +55,17 @@ export class ResultHelper {
                 else if (ArrayVariableType.typeArray.includes(variable.type)) {
                     resultProvider = new ArrayTypeResultProvider(variable.varName, variablesList, session, null, false, progress, ResultHelper.checkIfRequestIsCancelled);
                 }
-                else if (variable.type === DataTable.dataColumn) {
+                else if (variable.type === DataTableVariableType.dataColumn) {
                     resultProvider = new DataColumnTypeResultProvider(variable.varName, variablesList, session, ResultHelper.checkIfRequestIsCancelled);
                 }
-                else if (variable.type === DataTable.dataRow) {
+                else if (variable.type === DataTableVariableType.dataRow) {
                     resultProvider = new DataRowTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled);
                 }
-                else if (variable.type === DataTable.dataTable) {
+                else if (variable.type === DataTableVariableType.dataTable) {
                     resultProvider = new DataTableTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled, config);
+                }
+                else if (variable.type.includes(OtherVariableType.genericList)) {
+                    resultProvider = new GenericListTypeResultProvider(variable.varName, variablesList, session, progress, ResultHelper.checkIfRequestIsCancelled);
                 }
                 else {
                     resultProvider = new SingleTypeResultProvider(variable.varName, variablesList, null, ResultHelper.checkIfRequestIsCancelled);

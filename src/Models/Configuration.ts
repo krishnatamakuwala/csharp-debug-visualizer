@@ -23,7 +23,7 @@ class RecordsPerPage {
      * Configure records per page
      */
     public static configure() {
-        const recordsPerPage: number | undefined = workspace.getConfiguration("charpDebugVisualizer").get("recordsPerPage");
+        const recordsPerPage: number | undefined = workspace.getConfiguration("csharpDebugVisualizer").get("recordsPerPage");
         if (recordsPerPage === undefined) {
             throw Error(ErrorMessage.invalidRecordsPerPage);
         }
@@ -48,7 +48,7 @@ class Themes {
      * Configure hex code for current theme
      */
     public static configure() {
-        const colorThemeName: string | undefined = workspace.getConfiguration("charpDebugVisualizer").get("colorTheme");
+        const colorThemeName: string | undefined = workspace.getConfiguration("csharpDebugVisualizer").get("colorTheme");
         if (colorThemeName === undefined) {
             throw Error(ErrorMessage.invalidTheme);
         }
