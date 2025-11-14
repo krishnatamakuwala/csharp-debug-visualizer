@@ -28,6 +28,7 @@ var oldCurrentPage = currentPage.value;
 //#region Functions
 var btnWordWrap = document.getElementById("btn-word-wrap");
 var btnCopy = document.getElementById("btn-copy");
+var btnRefresh = document.getElementById("btn-refresh");
 //#endregion
 
 //#region Popup Notification
@@ -54,7 +55,6 @@ var dataTableConfig = {
 //#region Listners
 window.addEventListener("message", (event) => {
     const message = event.data; // The JSON data our extension sent
-    console.log(message);
     switch (message.command) {
         case "setData":
             setData(message.data);
@@ -68,6 +68,10 @@ btnWordWrap.addEventListener("click", function () {
 
 btnCopy.addEventListener("click", function () {
     copyToClipBoard();
+});
+
+btnRefresh.addEventListener("click", function () {
+    refreshData();
 });
 
 iconClose.addEventListener("click", function () {
@@ -195,7 +199,6 @@ function createRows(rows) {
     let _rows = "";
     let i = 1;
     rows.list.forEach((row) => {
-        console.log(i, currentPage.value, recordsPerPage.value);
         _rows += "<tr>";
         _rows += '<td>' + (((currentPage.value - 1) * recordsPerPage.value) + i) + "</td>";
         row.forEach((data) => {
@@ -239,6 +242,16 @@ function wrapText() {
     } else {
         genericResult.style.whiteSpace = "normal"
     }
+}
+
+function refreshData() {
+    if (isProcessing) {
+        return;
+    }
+    isProcessing = true;
+    vscode.postMessage({
+        command: "refreshData"
+    });
 }
 //#endregion
 

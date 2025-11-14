@@ -16,7 +16,11 @@ export class CommonResultProvider {
         this.matchExactName = _matchExactName;
     }
 
-    public getVariableReference() {
+    /**
+     * Get Variable reference
+     * @returns Variable reference
+     */
+    public getVariableReference(): number {
         const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
         let varRef: number;
         if (this.matchExactName) {
@@ -25,6 +29,20 @@ export class CommonResultProvider {
             varRef = this.variableList.filter(x => x.evaluateName?.includes(varName))[0].variablesReference;
         }
         return varRef;
+    }
+
+    /**
+     * Get value by evaluate name
+     */
+    public getValue(): unknown {
+        const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
+        let value: unknown;
+        if (this.matchExactName) {
+            value = this.variableList.filter(x => x.evaluateName === varName)[0].value;
+        } else {
+            value = this.variableList.filter(x => x.evaluateName?.includes(varName))[0].value;
+        }
+        return value;
     }
 
     /**

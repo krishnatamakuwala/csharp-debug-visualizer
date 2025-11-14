@@ -45,17 +45,22 @@ export class DataTableTypeResultProvider implements IResultProvider {
             return RequestStatusType.cancelled;
         }
 
-        console.time("async");
         const [columns, rowsConfig] = await Promise.all([this.getColumnList(dtResult), this.getRowList(dtResult)]);
         if (columns === RequestStatusType.cancelled || rowsConfig === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
         dt.columns = columns;
         dt.rows = rowsConfig.rows;
+        dt.tableName = this.getTableName(dtResult);
         dt.dataTableConfig = rowsConfig.dataTableConfig;
-        console.timeEnd("async");
 
         return dt;
+    }
+
+    private getTableName(dtResult: IVariable[]): string {
+        const commonResultProvider = new CommonResultProvider(this._variableName, dtResult, "TableName", true);
+        const tableName = commonResultProvider.getValue();
+        return tableName as string;
     }
 
     private async getColumnList(dtResult: IVariable[]): Promise<Columns | RequestStatusType.cancelled> {

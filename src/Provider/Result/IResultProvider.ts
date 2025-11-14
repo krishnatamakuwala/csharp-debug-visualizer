@@ -1,7 +1,6 @@
 import { RequestStatusType } from "../../Enums/RequestStatusType";
-import { DataTable } from "../../Enums/VariableType";
-import { RequestStatus } from "../../Models/RequestProgressStatus";
+import { DataTableVariableType } from "../../Enums/VariableType";
 
 export interface IResultProvider {
-    getResult(): Promise<string | DataTable | RequestStatusType.cancelled>;
+    getResult(): Promise<string | DataTableVariableType | RequestStatusType.cancelled>;
 }

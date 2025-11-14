@@ -37,6 +37,8 @@ input[type=number] {
 
 /*#region* Start: Action Menu */
 .action-menu {
+  display: flex;
+  justify-content: flex-end;
   z-index: 1;
   background-color: var(--vscode-editor-background);
   position: fixed;
@@ -48,9 +50,7 @@ input[type=number] {
 }
 
 .button-container {
-  position: absolute;
-  right: 20px;
-  top: 0px;
+  margin-right: 10px;
 }
 
 .button {
@@ -85,7 +85,6 @@ input[type=number] {
 }
 
 .btn-name {
-  font-family: "Montserrat", sans-serif;
   height: 100%;
   color: #ffffff;
   position: absolute;
@@ -227,6 +226,7 @@ td {
 }
 
 .pagination-input {
+  margin-left: 5px;
   height: 20px;
   width: 35px;
   border-radius: 10px;
@@ -276,7 +276,6 @@ select.pagination-input {
 
 .result {
   white-space: nowrap;
-  font-family: 'Roboto Mono', monospace;
   color: burlywood;
 }
 

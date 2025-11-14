@@ -75,19 +75,20 @@ class ArrayVariableType {
 /**
  * Class of datatable related variable types
  */
-class DataTable {
+class DataTableVariableType {
     public static readonly dataColumn = "System.Data.DataColumn";
     public static readonly dataRow = "System.Data.DataRow";
     public static readonly dataTable = "System.Data.DataTable";
 }
 
-class Default {
+class OtherVariableType {
+    public static readonly genericList = "System.Collections.Generic.List";
     public static readonly null = "null";
 }
  
 export {
     SingleVariableType,
     ArrayVariableType,
-    DataTable,
-    Default
+    DataTableVariableType,
+    OtherVariableType
 };
