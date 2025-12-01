@@ -22,6 +22,7 @@ export class SingleTypeResultProvider implements IResultProvider {
             return RequestStatusType.cancelled;
         }
         const commonResultProvider = new CommonResultProvider(this._variableName, this._variableList, this._childName, true);
-        return Promise.resolve(commonResultProvider.getValue() as string);
+        const result = commonResultProvider.getValue();
+        return Promise.resolve(result);
     }
 }

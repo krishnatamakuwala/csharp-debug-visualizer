@@ -102,15 +102,19 @@
     "esbuild": "npm run esbuild-base -- --sourcemap"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0",
+    "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
+    "@types/sinon": "^21.0.0",
+    "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "@typescript-eslint/parser": "^6.4.1",
+    "@vscode/test-electron": "^2.3.4",
+    "chai": "^6.2.1",
     "eslint": "^8.47.0",
     "glob": "^10.3.3",
     "mocha": "^10.2.0",
-    "typescript": "^5.1.6",
-    "@vscode/test-electron": "^2.3.4"
+    "sinon": "^21.0.0",
+    "typescript": "^5.1.6"
   }
 }

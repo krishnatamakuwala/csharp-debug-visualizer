@@ -1,5 +1,4 @@
 import { Progress } from "vscode";
-import { ErrorMessage } from "../Enums/Message";
 import { DataTableConfig, Variable } from "../Models/Variable";
 import { CustomDebugAdapter } from "../Proxies/CustomDebugAdapter";
 import { DebugSessionDetails } from "../Proxies/DebugSessionDetails";
@@ -21,11 +20,8 @@ export class ResultHelper {
      * @param session Object of debug session details 
      * @param {Progress} progress Progress class to track and manage progress
      */
-    public static async getResult(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails | undefined, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>, config: DataTableConfig | null): Promise<Variable | RequestStatusType.cancelled> {
+    public static async getResult(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>, config: DataTableConfig | null): Promise<Variable | RequestStatusType.cancelled> {
         try {
-            if (session === undefined) {
-                throw ErrorMessage.undefinedSession;
-            }
 
             let resultProvider: SingleTypeResultProvider | ArrayTypeResultProvider | DataColumnTypeResultProvider | DataRowTypeResultProvider | DataTableTypeResultProvider | GenericListTypeResultProvider;
 

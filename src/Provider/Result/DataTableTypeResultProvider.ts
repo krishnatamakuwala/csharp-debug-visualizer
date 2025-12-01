@@ -6,7 +6,6 @@ import { IResultProvider } from "./IResultProvider";
 import { SingleTypeResultProvider } from "./SingleTypeResultProvider";
 import { ArrayTypeResultProvider } from "./ArrayTypeResultProvider";
 import { Editor } from "../../Utilities/Editor";
-import { ErrorMessage } from "../../Enums/Message";
 import { RequestStatusType } from "../../Enums/RequestStatusType";
 import { Configuration } from "../../Models/Configuration";
 
@@ -67,15 +66,15 @@ export class DataTableTypeResultProvider implements IResultProvider {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;
         }
-        const commonResultProvider = new CommonResultProvider(this._variableName, dtResult, DataTableChildType.Columns);
+        const commonResultProvider = new CommonResultProvider(this._variableName, dtResult, DataTableChildType.columns);
         const childVarRef = commonResultProvider.getVariableReference();
         const childResult = await this._session.getVariables(childVarRef, 0);
 
-        const childCount: number | RequestStatusType.cancelled = await this.getChildCount(childResult, DataTableChildType.Columns);
+        const childCount: number | RequestStatusType.cancelled = await this.getChildCount(childResult, DataTableChildType.columns);
         if (childCount === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
-        const childList = await this.getChildList(childResult, DataTableChildType.Columns, 15);
+        const childList = await this.getChildList(childResult, DataTableChildType.columns, 15);
         if (childList === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
@@ -83,12 +82,12 @@ export class DataTableTypeResultProvider implements IResultProvider {
         return {
             count: childCount,
             list: childList
-        }
+        };
     }
 
     private async getChildCount(childResult: IVariable[], dataTableChildType: DataTableChildType): Promise<number | RequestStatusType.cancelled> {
         const childName = dataTableChildType + "." + "Count";
-        const singleResultProvider = new SingleTypeResultProvider(this._variableName, childResult, childName, this._cancellationToken)
+        const singleResultProvider = new SingleTypeResultProvider(this._variableName, childResult, childName, this._cancellationToken);
         const count = await singleResultProvider.getResult();
         if (count === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
@@ -103,12 +102,9 @@ export class DataTableTypeResultProvider implements IResultProvider {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;
         }
-        if (dataTableChildType === DataTableChildType.Rows) {
-            if (this._session.activeStackFrameId === undefined) {
-                throw ErrorMessage.undefinedSession;
-            }
+        if (dataTableChildType === DataTableChildType.rows) {
             childName = dataTableChildType + "[" + index + "]" + "." + "ItemArray";
-            varRef = parseInt((await this._session.evaluateExpression(this._variableName + "." + childName, this._session.activeStackFrameId, "variables")).variablesReference);
+            varRef = parseInt((await this._session.evaluateExpression(this._variableName + "." + childName, "variables")).variablesReference);
             isEnumerable = false;
         }
         const arrayResultProvider = new ArrayTypeResultProvider(this._variableName, childResult, this._session, childName, isEnumerable, this._progress, this._cancellationToken, count, varRef, totalProgress);
@@ -128,7 +124,7 @@ export class DataTableTypeResultProvider implements IResultProvider {
             return RequestStatusType.cancelled;
         }
 
-        const commonResultProvider = new CommonResultProvider(this._variableName, dtResult, DataTableChildType.Rows);
+        const commonResultProvider = new CommonResultProvider(this._variableName, dtResult, DataTableChildType.rows);
         const childVarRef = commonResultProvider.getVariableReference();
         const childResult = await this._session.getVariables(childVarRef, 0);
 
@@ -136,7 +132,7 @@ export class DataTableTypeResultProvider implements IResultProvider {
             return RequestStatusType.cancelled;
         }
 
-        const count = await this.getChildCount(childResult, DataTableChildType.Rows);
+        const count = await this.getChildCount(childResult, DataTableChildType.rows);
         let currentPage = this._dataTableConfig?.currentPage ?? 1;
         const recordsPerPage = this._dataTableConfig?.recordsPerPage ?? Configuration.recordsPerPage;
         const totalPage = Math.ceil(count / recordsPerPage);
@@ -157,7 +153,7 @@ export class DataTableTypeResultProvider implements IResultProvider {
         for (let i = 0; i < Math.min(recordsPerPage, count - ((currentPage - 1) * recordsPerPage)); i += batchSize) {
             const batch = Array.from({ length: Math.min(batchSize, (count - ((currentPage - 1) * recordsPerPage)) - i) }, (_, j) => i + j);
             const batchResult = await Promise.all(
-                batch.map(k => this.getChildList(childResult, DataTableChildType.Rows, 45 / count, null, ((currentPage - 1) * recordsPerPage) + k))
+                batch.map(k => this.getChildList(childResult, DataTableChildType.rows, 45 / count, null, ((currentPage - 1) * recordsPerPage) + k))
             );
             if (batchResult.includes(RequestStatusType.cancelled)) {
                 return RequestStatusType.cancelled;
@@ -179,8 +175,8 @@ export class DataTableTypeResultProvider implements IResultProvider {
 }
 
 enum DataTableChildType {
-    Columns = "Columns",
-    Rows = "Rows"
+    columns = "Columns",
+    rows = "Rows"
 }
 
 interface RowsConfig {

@@ -1,5 +1,6 @@
 import { workspace } from "vscode";
 import { ErrorMessage } from "../Enums/Message";
+import { InvalidRecordsPerPageError, InvalidThemeError } from "../Extensions/Errors";
 
 /**
  * Configuration of web-view provided by user 
@@ -25,7 +26,7 @@ class RecordsPerPage {
     public static configure() {
         const recordsPerPage: number | undefined = workspace.getConfiguration("csharpDebugVisualizer").get("recordsPerPage");
         if (recordsPerPage === undefined) {
-            throw Error(ErrorMessage.invalidRecordsPerPage);
+            throw new InvalidRecordsPerPageError();
         }
         Configuration.recordsPerPage = recordsPerPage;
     }
@@ -50,11 +51,11 @@ class Themes {
     public static configure() {
         const colorThemeName: string | undefined = workspace.getConfiguration("csharpDebugVisualizer").get("colorTheme");
         if (colorThemeName === undefined) {
-            throw Error(ErrorMessage.invalidTheme);
+            throw new InvalidThemeError();
         }
         const colorTheme = Themes.themes.filter(x => x.themeName === colorThemeName)[0].hexCode;
         if (colorTheme === undefined || colorTheme === null) {
-            throw Error(ErrorMessage.invalidTheme);
+            throw new InvalidThemeError();
         } else {
             Configuration.colorTheme = colorTheme;
         }
