@@ -13,6 +13,7 @@ import { RequestStatus, ProgressTracker } from './Models/RequestProgressStatus';
 import { WebViewHelper } from './Helpers/WebViewHelper';
 import { Configuration } from './Models/Configuration';
 import { OtherVariableType } from './Enums/VariableType';
+import { EditorNotFoundError, UndefinedSessionError } from './Extensions/Errors';
 
 // This method is called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -35,14 +36,14 @@ export function activate(context: vscode.ExtensionContext) {
 				Configuration.configure();
 				const editor = vscode.window.activeTextEditor;
 				if (!editor) {
-					throw ErrorMessage.editorNotExists;
+					throw new EditorNotFoundError();
 				}
 				variable.varName = Editor.getSelectedVariable(editor);
 
-				if (session !== undefined && session?.activeStackFrameId !== undefined) {
+				if (session !== undefined) {
 					try {
 						//#region Get type of a selected variable
-						variable.type = (await session?.evaluateExpression(`${variable.varName}.GetType().FullName`, session?.activeStackFrameId, "variables")).result as string;
+						variable.type = (await session?.evaluateExpression(`${variable.varName}.GetType().FullName`, "variables")).result as string;
 						variable.type = Editor.removeLeadingAndTrailingQuotes(variable.type);
 						if (variable.type.toLowerCase().includes("error".toLowerCase())) {
 							var errorMessage = variable.type;
@@ -69,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				}
 				else {
-					throw Error(ErrorMessage.undefinedSession);
+					throw new UndefinedSessionError();
 				}
 			} catch (error) {
 				RequestStatus.status = RequestStatusType.failed;
@@ -90,7 +91,7 @@ export function activate(context: vscode.ExtensionContext) {
  * @param variable Variable
  * @returns 
  */
-export async function withProgress(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails | undefined, variable: Variable, config: DataTableConfig | null = null): Promise<ProcessResult> {
+export async function withProgress(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails, variable: Variable, config: DataTableConfig | null = null): Promise<ProcessResult> {
 	let processResult = await vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
 		title: InformationMessage.visualizing,
@@ -121,7 +122,7 @@ export async function withProgress(customDebugAdapter: CustomDebugAdapter, sessi
 					const _processResult: ProcessResult = {
 						requestStatusType: RequestStatus.status,
 						variable: variable
-					}
+					};
 					resolve(_processResult);
 					break;
 				case RequestStatusType.failed:
@@ -158,6 +159,9 @@ export function showResultNotification(requestStatusType: RequestStatusType) {
 export async function getResultWithConfig(config: DataTableConfig, variable: Variable): Promise<Variable> {
 	const customDebugAdapter: CustomDebugAdapter = new CustomDebugAdapter(new DebugProxy);
 	const session: DebugSessionDetails | undefined = customDebugAdapter.activeSession;
+	if (session === undefined) {
+		throw new UndefinedSessionError();
+	}
 	const processResult = await withProgress(customDebugAdapter, session, variable, config);
 	showResultNotification(processResult.requestStatusType);
 	return processResult.variable;
@@ -166,6 +170,9 @@ export async function getResultWithConfig(config: DataTableConfig, variable: Var
 export async function refreshData(variable: Variable) {
 	const customDebugAdapter: CustomDebugAdapter = new CustomDebugAdapter(new DebugProxy);
 	const session: DebugSessionDetails | undefined = customDebugAdapter.activeSession;
+	if (session === undefined) {
+		throw new UndefinedSessionError();
+	}
 	const processResult = await withProgress(customDebugAdapter, session, variable);
 	showResultNotification(processResult.requestStatusType);
 	return processResult.variable;

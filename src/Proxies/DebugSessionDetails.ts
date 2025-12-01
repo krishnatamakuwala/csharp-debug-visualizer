@@ -88,15 +88,15 @@ export class DebugSessionDetails {
     /**
      * Get evaluated result of expression
      * @param expression Expression
-     * @param frameId Id of a particular stack frame
      * @param context The context in which the evaluate request is used
+     * @param frameId Id of a particular stack frame
      * @returns {Promise<EvaluateResult>} Promise of evaluated result
      */
-    public async evaluateExpression(expression: string, frameId: number, context: "watch" | "repl" | "hover" | "clipboard"| "variables" | string): Promise<IEvaluatedResult> {
+    public async evaluateExpression(expression: string, context: "watch" | "repl" | "hover" | "clipboard"| "variables" | string, frameId?: number): Promise<IEvaluatedResult> {
         try {
             const result = await this._session.customRequest("evaluate", {
                expression: expression,
-               frameId: frameId,
+               frameId: frameId ?? this.activeStackFrameId,
                context: context
             }) as IEvaluatedResult;
             return result;

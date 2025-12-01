@@ -1,5 +1,4 @@
-import { ErrorMessage } from "../../Enums/Message";
-import { Variable } from "../../Models/Variable";
+import { ValueNotFoundError } from "../../Extensions/Errors";
 import { DebugSessionDetails, IVariable } from "../../Proxies/DebugSessionDetails";
 
 export class CommonResultProvider {
@@ -22,27 +21,35 @@ export class CommonResultProvider {
      */
     public getVariableReference(): number {
         const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
-        let varRef: number;
+        let varRefArr: IVariable[];
         if (this.matchExactName) {
-            varRef = this.variableList.filter(x => x.evaluateName === varName)[0].variablesReference;
+            varRefArr = this.variableList.filter(x => x.evaluateName === varName);
         } else {
-            varRef = this.variableList.filter(x => x.evaluateName?.includes(varName))[0].variablesReference;
+            varRefArr = this.variableList.filter(x => x.evaluateName?.includes(varName));
         }
-        return varRef;
+
+        if (!varRefArr || !varRefArr[0]) {
+            throw new ValueNotFoundError();
+        }
+        return varRefArr[0].variablesReference;
     }
 
     /**
      * Get value by evaluate name
      */
-    public getValue(): unknown {
+    public getValue(): string {
         const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
-        let value: unknown;
+        let valueArr: IVariable[];
         if (this.matchExactName) {
-            value = this.variableList.filter(x => x.evaluateName === varName)[0].value;
+            valueArr = this.variableList.filter(x => x.evaluateName === varName);
         } else {
-            value = this.variableList.filter(x => x.evaluateName?.includes(varName))[0].value;
+            valueArr = this.variableList.filter(x => x.evaluateName?.includes(varName));
         }
-        return value;
+
+        if (!valueArr || !valueArr[0]) {
+            throw new ValueNotFoundError();
+        }
+        return valueArr[0].value;
     }
 
     /**
@@ -51,12 +58,9 @@ export class CommonResultProvider {
      * @returns Count of child of array or enumerable variable
      */
     public async getCountOfChild(session: DebugSessionDetails, isEnumerable: boolean): Promise<number> {
-        if (session.activeStackFrameId === undefined) {
-            throw ErrorMessage.undefinedSession;
-        }
         const varName = this.childName !== null ? this.variableName + "." + this.childName : this.variableName;
         let countFunction = isEnumerable ? "Count" : "Length";
-        const count = await session.evaluateExpression(`${varName}.${countFunction}`, session.activeStackFrameId, "variables")
+        const count = await session.evaluateExpression(`${varName}.${countFunction}`, "variables");
         return parseInt(count.result as string);
     }
 }

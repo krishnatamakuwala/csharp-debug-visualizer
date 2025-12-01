@@ -67,7 +67,7 @@ export class ArrayTypeResultProvider implements IResultProvider {
             }
             var varResult = (await this._session.getVariables(variablesReference, (currentPage * countPerPage), countPerPage)).map(x => { return x.value; });
             if (currentPage + 1 !== totalPage || this._isEnumerable) {
-                varResult.pop(); // Remove appended unnesecary element from array
+                varResult.pop(); // Remove appended unnesecary empty element from an array
             }
             result = result + (currentPage === 0 ? "" : ", ") + varResult.join(", ");
 
