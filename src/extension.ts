@@ -97,6 +97,7 @@ export async function withProgress(customDebugAdapter: CustomDebugAdapter, sessi
 		title: InformationMessage.visualizing,
 		cancellable: true
 	}, async (progress, token) => {
+		RequestStatus.status = RequestStatusType.inProgress;
 		token.onCancellationRequested(() => {
 			RequestStatus.status = RequestStatusType.cancelled;
 		});

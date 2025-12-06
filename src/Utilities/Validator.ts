@@ -25,11 +25,14 @@ export class Validator {
      * @param recordsPerPage Records Per Page
      * @returns Records per page if valid else throws an error
      */
-    public static validateRecordsPerPage(recordsPerPage: number | undefined): number {
+    public static validateRecordsPerPage(recordsPerPage: string | undefined): number {
         if (recordsPerPage === undefined || !RecordsPerPage.arrRecordPerPage.includes(recordsPerPage)) {
             throw new InvalidRecordsPerPageError();
         } else {
-            return recordsPerPage;
+            if (recordsPerPage === "All") {
+                return 0;
+            }
+            return parseInt(recordsPerPage);
         }
     }
 }

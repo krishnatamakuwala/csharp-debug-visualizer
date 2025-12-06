@@ -55,14 +55,16 @@
           },
           "csharpDebugVisualizer.recordsPerPage": {
             "title": "Records Per Page",
-            "type": "number",
+            "type": "string",
             "description": "Choose records per page for datatable variable type according to your preference. The higher number of records per page will take more time to load.",
-            "default": 10,
+            "default": "10",
             "enum": [
-              5,
-              10,
-              15,
-              20
+              "5",
+              "10",
+              "15",
+              "20",
+              "25",
+              "All"
             ]
           }
         }
