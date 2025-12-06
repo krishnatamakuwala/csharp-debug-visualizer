@@ -148,7 +148,9 @@ export class DataTableTypeResultProvider implements IResultProvider {
 
         const count = await this.getChildCount(childResult, DataTableChildType.rows);
         let currentPage = this._dataTableConfig?.currentPage ?? 1;
-        const recordsPerPage = Validator.validateRecordsPerPage(this._dataTableConfig?.recordsPerPage ?? Configuration.recordsPerPage);
+        let recordsPerPage = this._dataTableConfig?.recordsPerPage ?? Configuration.recordsPerPage;
+        const validatedRecordsPerPage = Validator.validateRecordsPerPage(recordsPerPage === 0 ? "All" : recordsPerPage.toString());
+        recordsPerPage = validatedRecordsPerPage === 0 ? count : validatedRecordsPerPage;
         const totalPage = Math.ceil(count / recordsPerPage);
         if (currentPage % 1 !== 0) {
             currentPage = Math.ceil(currentPage);
@@ -196,7 +198,7 @@ export class DataTableTypeResultProvider implements IResultProvider {
             },
             dataTableConfig: {
                 currentPage: currentPage,
-                recordsPerPage: recordsPerPage,
+                recordsPerPage: validatedRecordsPerPage,
                 totalPage: totalPage
             }
         };

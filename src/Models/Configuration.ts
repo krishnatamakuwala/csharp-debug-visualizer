@@ -19,14 +19,14 @@ class Configuration {
 
 class RecordsPerPage {
 
-    public static arrRecordPerPage: number[] = [5, 10, 15, 20];
+    public static arrRecordPerPage: string[] = ["5", "10", "15", "20", "25", "All"];
 
     /**
      * Configure records per page
      */
     public static configure() {
         const recordsPerPage: number | undefined = workspace.getConfiguration("csharpDebugVisualizer").get("recordsPerPage");
-        Configuration.recordsPerPage = Validator.validateRecordsPerPage(recordsPerPage);
+        Configuration.recordsPerPage = Validator.validateRecordsPerPage(recordsPerPage?.toString());
     }
 }
 
