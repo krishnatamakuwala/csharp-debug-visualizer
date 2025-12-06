@@ -29,6 +29,9 @@
 				"${workspaceFolder}/out/test/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
+			"env": {
+				"NODE_ENV": "test"
+			},
 			"smartStep": true
 		}
 	]

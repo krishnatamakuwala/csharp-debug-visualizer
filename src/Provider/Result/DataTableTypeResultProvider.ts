@@ -8,6 +8,7 @@ import { ArrayTypeResultProvider } from "./ArrayTypeResultProvider";
 import { Editor } from "../../Utilities/Editor";
 import { RequestStatusType } from "../../Enums/RequestStatusType";
 import { Configuration } from "../../Models/Configuration";
+import { Validator } from "../../Utilities/Validator";
 
 export class DataTableTypeResultProvider implements IResultProvider {
 
@@ -17,6 +18,9 @@ export class DataTableTypeResultProvider implements IResultProvider {
     _progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>;
     _cancellationToken: () => boolean;
     _dataTableConfig: DataTableConfig | null;
+
+    private rowChildCount: number | null = null;
+    private _env = process.env.NODE_ENV || 'development';
 
     constructor(variableName: string, variableList: IVariable[], session: DebugSessionDetails, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>, cancellationToken: () => boolean, dataTableConfig: DataTableConfig | null = null) {
         this._variableName = variableName;
@@ -44,7 +48,14 @@ export class DataTableTypeResultProvider implements IResultProvider {
             return RequestStatusType.cancelled;
         }
 
-        const [columns, rowsConfig] = await Promise.all([this.getColumnList(dtResult), this.getRowList(dtResult)]);
+        let columns: RequestStatusType.cancelled | Columns;
+        let rowsConfig: RequestStatusType.cancelled | RowsConfig;
+        if (this._env === "test") {
+            columns = await this.getColumnList(dtResult);
+            rowsConfig = await this.getRowList(dtResult);
+        } else {
+            [columns, rowsConfig] = await Promise.all([this.getColumnList(dtResult), this.getRowList(dtResult)]);
+        }
         if (columns === RequestStatusType.cancelled || rowsConfig === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
@@ -74,7 +85,8 @@ export class DataTableTypeResultProvider implements IResultProvider {
         if (childCount === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
-        const childList = await this.getChildList(childResult, DataTableChildType.columns, 15);
+        this.rowChildCount = childCount;
+        const childList = await this.getChildList(childResult, DataTableChildType.columns, 15, childCount);
         if (childList === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
@@ -112,13 +124,15 @@ export class DataTableTypeResultProvider implements IResultProvider {
         if (childList === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
         }
+        if (dataTableChildType === DataTableChildType.rows && this.rowChildCount === null) {
+            this.rowChildCount = childList.length;
+        }
         return childList.split(", ").map((str) => {
             return Editor.removeLeadingAndTrailingCBraces(str);
         });
     }
 
     private async getRowList(dtResult: IVariable[]): Promise<RowsConfig | RequestStatusType.cancelled> {
-        let i = 0;
         let rowList: string[][] | RequestStatusType.cancelled = [];
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;
@@ -134,7 +148,7 @@ export class DataTableTypeResultProvider implements IResultProvider {
 
         const count = await this.getChildCount(childResult, DataTableChildType.rows);
         let currentPage = this._dataTableConfig?.currentPage ?? 1;
-        const recordsPerPage = this._dataTableConfig?.recordsPerPage ?? Configuration.recordsPerPage;
+        const recordsPerPage = Validator.validateRecordsPerPage(this._dataTableConfig?.recordsPerPage ?? Configuration.recordsPerPage);
         const totalPage = Math.ceil(count / recordsPerPage);
         if (currentPage % 1 !== 0) {
             currentPage = Math.ceil(currentPage);
@@ -152,9 +166,24 @@ export class DataTableTypeResultProvider implements IResultProvider {
         const batchSize = 5;
         for (let i = 0; i < Math.min(recordsPerPage, count - ((currentPage - 1) * recordsPerPage)); i += batchSize) {
             const batch = Array.from({ length: Math.min(batchSize, (count - ((currentPage - 1) * recordsPerPage)) - i) }, (_, j) => i + j);
-            const batchResult = await Promise.all(
-                batch.map(k => this.getChildList(childResult, DataTableChildType.rows, 45 / count, null, ((currentPage - 1) * recordsPerPage) + k))
-            );
+
+            let batchResult: (RequestStatusType.cancelled | string[])[] = [];
+            if (this._env === "test") {
+                for (const k of batch) {
+                    batchResult.push(await this.getChildList(
+                        childResult,
+                        DataTableChildType.rows,
+                        45 / Math.min(recordsPerPage, count - ((currentPage - 1) * recordsPerPage)),
+                        this.rowChildCount,
+                        ((currentPage - 1) * recordsPerPage) + k
+                    ));
+                }
+            } else {
+                batchResult = await Promise.all(
+                    batch.map(k => this.getChildList(childResult, DataTableChildType.rows, 45 / Math.min(recordsPerPage, count - ((currentPage - 1) * recordsPerPage)), this.rowChildCount, ((currentPage - 1) * recordsPerPage) + k))
+                );
+            }
+
             if (batchResult.includes(RequestStatusType.cancelled)) {
                 return RequestStatusType.cancelled;
             }
