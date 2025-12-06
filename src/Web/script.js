@@ -29,6 +29,7 @@ var oldCurrentPage = currentPage.value;
 var btnWordWrap = document.getElementById("btn-word-wrap");
 var btnCopy = document.getElementById("btn-copy");
 var btnRefresh = document.getElementById("btn-refresh");
+var btnExport = document.getElementById("btn-export");
 //#endregion
 
 //#region Popup Notification
@@ -42,6 +43,7 @@ var iconClose = document.getElementById("icon-close");
 const vscode = acquireVsCodeApi();
 var popupTimeout;
 var isProcessing = false;
+var variable;
 //#endregion
 
 getData();
@@ -72,6 +74,10 @@ btnCopy.addEventListener("click", function () {
 
 btnRefresh.addEventListener("click", function () {
     refreshData();
+});
+
+btnExport.addEventListener("click", function () {
+    exportToCSV();
 });
 
 iconClose.addEventListener("click", function () {
@@ -159,24 +165,28 @@ lastPageBtn.addEventListener("click", function () {
 });
 //#endregion
 
-function setData(variable) {
-    if (variable.type === "System.Data.DataTable") {
+function setData(_variable) {
+    if (_variable.type === "System.Data.DataTable") {
         hideElement(genericContainer);
-        dataTableName.innerHTML = variable.varName;
-        tableName.innerHTML = variable.result.tableName;
-        columnCount.innerHTML = variable.result.columns.count;
-        rowCount.innerHTML = variable.result.rows.count;
-        recordsPerPage.value = variable.result.dataTableConfig.recordsPerPage;
-        currentPage.value = variable.result.dataTableConfig.currentPage;
+        hideElement(btnCopy);
+        hideElement(btnWordWrap);
+        dataTableName.innerHTML = _variable.varName;
+        tableName.innerHTML = _variable.result.tableName;
+        columnCount.innerHTML = _variable.result.columns.count;
+        rowCount.innerHTML = _variable.result.rows.count;
+        recordsPerPage.value = _variable.result.dataTableConfig.recordsPerPage;
+        currentPage.value = _variable.result.dataTableConfig.currentPage;
         oldCurrentPage = currentPage.value;
-        totalPage.innerHTML = variable.result.dataTableConfig.totalPage;
-        createTable(variable.result);
+        totalPage.innerHTML = _variable.result.dataTableConfig.totalPage;
+        createTable(_variable.result);
         togglePreviousOrNextPageBtn();
     } else {
         hideElement(datatableContainer);
-        genericName.innerHTML = variable.varName;
-        genericResult.innerHTML = variable.result;
+        hideElement(btnExport);
+        genericName.innerHTML = _variable.varName;
+        genericResult.innerHTML = _variable.result;
     }
+    variable = _variable;
     isProcessing = false;
 }
 
@@ -253,16 +263,37 @@ function refreshData() {
         command: "refreshData"
     });
 }
+
+function exportToCSV() {
+    let csvData = '';
+    if (variable.result.columns && variable.result.columns.count > 0) {
+        csvData += variable.result.columns.list.toString();
+        csvData += "\n";
+    }
+    if (variable.result.rows && variable.result.rows.count > 0) {
+        variable.result.rows.list.forEach(row => { csvData += row.toString() + "\n"});
+        variable.result.rows.list.map(row => { console.log(row) });
+    }
+
+    console.log(csvData);
+
+    let anchor = document.createElement('a');
+    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvData);
+    anchor.target = '_blank';
+    anchor.download = 'DataTable.csv';
+    anchor.click();
+    showNotification("Exported in CSV.", "success", true);
+}
 //#endregion
 
 function showNotification(message, type, isAutoClosable) {
     if (!popupContainer.classList.contains("show")) {
         if (type === "success") {
             popupContainer.classList.add("success");
-            iconSuccess.style.display = "block";
+            showElement(iconSuccess);
         } else if (type === "error") {
             popupContainer.classList.add("error");
-            iconError.style.display = "block";
+            showElement(iconError);
         }
         popupMessage.innerHTML = message;
         popupContainer.classList.toggle("show");
@@ -279,8 +310,8 @@ function closePopup() {
     setTimeout(function () {
         popupContainer.classList.remove("success");
         popupContainer.classList.remove("error");
-        iconSuccess.style.display = "none";
-        iconError.style.display = "none";
+        hideElement(iconSuccess);
+        hideElement(iconError);
     }, 500);
 }
 
@@ -307,6 +338,10 @@ function getData() {
 
 function hideElement(element) {
     element.style.display = "none";
+}
+
+function showElement(element, show = "block") {
+    element.style.display = show;
 }
 
 function togglePaginationBtn(btn, isDisabled) {
