@@ -4,7 +4,7 @@
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
   "license": "SEE LICENSE IN LICENSE",
   "publisher": "KrishnaPiyush",
-  "icon": "logo/csharp-debug-visualizer.png",
+  "icon": "media/logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
@@ -15,7 +15,7 @@
     "email": "krishna02122001@gmail.com"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.106.0"
   },
   "categories": [
     "Visualization"
@@ -92,29 +92,31 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
-    "esbuild-base": "esbuild ./out/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run esbuild-base -- --sourcemap"
+    "test": "cross-env NODE_ENV=test node ./out/test/runTest.js",
+    "esbuild": "npm run compile && npm run lint && node esbuild.js",
+    "vscode:prepublish": "npm run compile && npm run lint && node esbuild.js --production",
+    "deploy": "vsce publish"
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
     "@types/sinon": "^21.0.0",
-    "@types/vscode": "^1.85.0",
-    "@typescript-eslint/eslint-plugin": "^6.4.1",
-    "@typescript-eslint/parser": "^6.4.1",
-    "@vscode/test-electron": "^2.3.4",
+    "@types/vscode": "^1.106.1",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
+    "@vscode/test-electron": "^2.5.2",
     "chai": "^6.2.1",
-    "eslint": "^8.47.0",
-    "glob": "^10.3.3",
-    "mocha": "^10.2.0",
+    "cross-env": "^10.1.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.39.1",
+    "glob": "^13.0.0",
+    "mocha": "^11.7.5",
     "sinon": "^21.0.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.9.3"
   }
 }

@@ -8,22 +8,22 @@ import { RequestStatusType } from "../../Enums/RequestStatusType";
 import { ValueNotFoundError } from "../../Extensions/Errors";
 import { before } from "mocha";
 import { createMockCancellationToken } from "../Mocks/MockCancellationToken";
-import { ArrayTypeResultProvider } from "../../Provider/Result/ArrayTypeResultProvider";
+import { DataRowTypeResultProvider } from "../../Provider/Result/DataRowTypeResultProvider";
 import { createMockDebugSession } from "../Mocks/MockDebugSession";
 import { MockProgress } from "../Mocks/MockProgress";
 import { createMockVariable } from "../Mocks/MockVariable";
 import { ProgressTracker } from "../../Models/RequestProgressStatus";
-import { mockArrayPaging } from "../Mocks/MockArrayPaging";
+import { ArrayType, mockArrayPaging } from "../Mocks/MockArrayPaging";
 import { buildArrayVariables, buildExpectedResult } from "../Helpers/TestArrayHelper";
 
-describe("Array type variable tests", () => {
+describe("DataRow type variable tests", () => {
 
     let variableList: IVariable[];
     let cancellationToken: sinon.SinonStub<any[], any>;
     let mockSession;
     let debugSessionDetails: DebugSessionDetails;
     let progress: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>;
-    let countPerPage = 20;
+    let countPerPage = 10;
 
     before(() => {
         vscode.window.showInformationMessage("Start all tests.");
@@ -32,7 +32,7 @@ describe("Array type variable tests", () => {
     beforeEach(() => {
         ProgressTracker.progress = 0;
         variableList = [
-            createMockVariable("testVar", "Array [3]", 1001),
+            createMockVariable("testVar", "{Syste.Data.DataRow}", 1001),
             createMockVariable("testVar2", "test", 1002, "testVar.testVar2")
         ];
         mockSession = createMockDebugSession();
@@ -42,10 +42,16 @@ describe("Array type variable tests", () => {
 
         (mockSession.customRequest as sinon.SinonStub)
             .onFirstCall().resolves({
+                variables: [
+                    createMockVariable("HasErrors [bool]", "false", 1003, "testVar.HasErrors"),
+                    createMockVariable("ItemArray [object[]]", "{object[33]}", 1004, "testVar.ItemArray")
+                ]
+            })
+            .onSecondCall().resolves({
                 result: "3",
                 variablesReference: 1001,
             })
-            .onSecondCall().resolves({
+            .onThirdCall().resolves({
                 variables: [
                     createMockVariable("x", "10", 1003, "testVar[0]"),
                     createMockVariable("y", "20", 1004, "testVar[1]"),
@@ -57,12 +63,10 @@ describe("Array type variable tests", () => {
     it("should return value when it exists and request is not cancelled", async () => {
         const variableName = "testVar";
         const count = 3;
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
@@ -70,24 +74,22 @@ describe("Array type variable tests", () => {
 
         expect(result).to.be.equal("10, 20, 30");
         expect(result).to.be.a("string");
-        expect(cancellationToken.callCount).to.be.equal(1 + (Math.ceil(count / countPerPage)));
+        expect(cancellationToken.callCount).to.be.equal(2 + (Math.ceil(count / countPerPage)));
         expect(ProgressTracker.progress).to.be.equal(50);
     });
 
     it("should return value when it does not exists and request is not cancelled", async () => {
         const variableName = "persons";
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
         provider.getResult().catch((e) => {
             expect(e).to.be.an.instanceOf(ValueNotFoundError, "The value for the requested variable could not be found.");
-            expect(cancellationToken.callCount).to.be.equal(1);
+            expect(cancellationToken.callCount).to.be.equal(2);
             expect(ProgressTracker.progress).to.be.equal(0);
         });
     });
@@ -98,19 +100,23 @@ describe("Array type variable tests", () => {
         const count = 0;
         (_mockSession.customRequest as sinon.SinonStub)
             .onFirstCall().resolves({
+                variables: [
+                    createMockVariable("HasErrors [bool]", "false", 1003, "testVar.HasErrors"),
+                    createMockVariable("ItemArray [object[]]", "{object[0]}", 1004, "testVar.ItemArray")
+                ]
+            })
+            .onSecondCall().resolves({
                 result: count.toString(),
                 variablesReference: 1001,
             })
-            .onSecondCall().resolves({
+            .onThirdCall().resolves({
                 variables: []
             });
         const variableName = "testVar";
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             _debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
@@ -118,27 +124,25 @@ describe("Array type variable tests", () => {
 
         expect(result).to.be.equal("");
         expect(result).to.be.a("string");
-        expect(cancellationToken.callCount).to.be.equal(1 + (Math.ceil(count / countPerPage)));
+        expect(cancellationToken.callCount).to.be.equal(2 + (Math.ceil(count / countPerPage)));
         expect(ProgressTracker.progress).to.be.equal(0);
     });
 
     it("should not return value when request is cancelled", async () => {
         const variableName = "testVar";
         const count = 3;
-        cancellationToken.onSecondCall().returns(true);
-        const provider = new ArrayTypeResultProvider(
+        cancellationToken.onThirdCall().returns(true);
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
         const result = await provider.getResult();
 
         expect(result).to.be.equal(RequestStatusType.cancelled);
-        expect(cancellationToken.callCount).to.be.equal(1 + (Math.ceil(count / countPerPage)));
+        expect(cancellationToken.callCount).to.be.equal(2 + (Math.ceil(count / countPerPage)));
         expect(ProgressTracker.progress).to.be.equal(0);
     });
 
@@ -150,15 +154,14 @@ describe("Array type variable tests", () => {
             _mockSession.customRequest as sinon.SinonStub,
             count,
             countPerPage,
-            buildArrayVariables(count, countPerPage)
+            buildArrayVariables(count, countPerPage),
+            ArrayType.dataRow
         );
         const variableName = "testVar";
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             _debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
@@ -166,7 +169,7 @@ describe("Array type variable tests", () => {
 
         expect(result).to.be.equal(buildExpectedResult(count));
         expect(result).to.be.a("string");
-        expect(cancellationToken.callCount).to.be.equal(1 + totalPage);
+        expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
         expect(ProgressTracker.progress).to.be.equal(50);
     });
 
@@ -178,15 +181,14 @@ describe("Array type variable tests", () => {
             _mockSession.customRequest as sinon.SinonStub,
             count,
             countPerPage,
-            buildArrayVariables(count, countPerPage)
+            buildArrayVariables(count, countPerPage),
+            ArrayType.dataRow
         );
         const variableName = "testVar";
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             _debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
@@ -194,7 +196,7 @@ describe("Array type variable tests", () => {
 
         expect(result).to.be.equal(buildExpectedResult(count));
         expect(result).to.be.a("string");
-        expect(cancellationToken.callCount).to.be.equal(1 + totalPage);
+        expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
         expect(ProgressTracker.progress).to.be.equal(50);
     });
 
@@ -206,15 +208,14 @@ describe("Array type variable tests", () => {
             _mockSession.customRequest as sinon.SinonStub,
             count,
             countPerPage,
-            buildArrayVariables(count, countPerPage)
+            buildArrayVariables(count, countPerPage),
+            ArrayType.dataRow
         );
         const variableName = "testVar";
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             _debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
@@ -222,7 +223,7 @@ describe("Array type variable tests", () => {
 
         expect(result).to.be.equal(buildExpectedResult(count));
         expect(result).to.be.a("string");
-        expect(cancellationToken.callCount).to.be.equal(1 + totalPage);
+        expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
         expect(ProgressTracker.progress).to.be.equal(50);
     });
 
@@ -234,15 +235,14 @@ describe("Array type variable tests", () => {
             _mockSession.customRequest as sinon.SinonStub,
             count,
             countPerPage,
-            buildArrayVariables(count, countPerPage)
+            buildArrayVariables(count, countPerPage),
+            ArrayType.dataRow
         );
         const variableName = "testVar";
-        const provider = new ArrayTypeResultProvider(
+        const provider = new DataRowTypeResultProvider(
             variableName,
             variableList,
             _debugSessionDetails,
-            null,
-            false,
             progress,
             cancellationToken
         );
@@ -250,7 +250,7 @@ describe("Array type variable tests", () => {
 
         expect(result).to.be.equal(buildExpectedResult(count));
         expect(result).to.be.a("string");
-        expect(cancellationToken.callCount).to.be.equal(1 + totalPage);
+        expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
         expect(ProgressTracker.progress).to.be.equal(50);
     });
 });

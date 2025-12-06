@@ -25,7 +25,7 @@ export class GenericListTypeResultProvider implements IResultProvider {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;
         }
-        const arrayResultProvider = new ArrayTypeResultProvider(this._variableName, this._variableList, this._session, null, true, this._progress, this._cancellationToken, null, null);
+        const arrayResultProvider = new ArrayTypeResultProvider(this._variableName, this._variableList, this._session, null, true, this._progress, this._cancellationToken);
         const result = await arrayResultProvider.getResult();
         if (result === RequestStatusType.cancelled) {
             return RequestStatusType.cancelled;
