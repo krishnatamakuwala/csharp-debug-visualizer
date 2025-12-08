@@ -33,7 +33,6 @@ export class DebugSessionDetails {
     /**
      * Get stack trace of a particular thread
      * @param threadId Id of a particular thread
-     * @param levels The maximum number of frames to return, default value is 0 (which will return all the frames)
      * @param startFrame The index of the first frame to return, default value is 0
      * @returns {Promise<IStackTraceInfo>} Promise of stack trace details
      */

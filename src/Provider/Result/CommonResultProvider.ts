@@ -55,6 +55,7 @@ export class CommonResultProvider {
     /**
      * Get count of child of array or enumerable variable
      * @param session Active session
+     * @param isEnumerable Is Enumerable
      * @returns Count of child of array or enumerable variable
      */
     public async getCountOfChild(session: DebugSessionDetails, isEnumerable: boolean): Promise<number> {

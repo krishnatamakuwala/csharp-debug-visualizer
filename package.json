@@ -4,7 +4,7 @@
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
   "license": "SEE LICENSE IN LICENSE",
   "publisher": "KrishnaPiyush",
-  "icon": "media/logo.png",
+  "icon": "icon/logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
@@ -33,7 +33,7 @@
   "pricing": "Free",
   "homepage": "https://github.com/krishnatamakuwala/csharp-debug-visualizer/blob/main/README.md",
   "activationEvents": [],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "configuration": [
       {
@@ -61,9 +61,9 @@
             "enum": [
               "5",
               "10",
-              "15",
               "20",
               "25",
+              "50",
               "All"
             ]
           }
@@ -101,6 +101,7 @@
     "test": "cross-env NODE_ENV=test node ./out/test/runTest.js",
     "esbuild": "npm run compile && npm run lint && node esbuild.js",
     "vscode:prepublish": "npm run compile && npm run lint && node esbuild.js --production",
+    "package": "vsce package",
     "deploy": "vsce publish"
   },
   "devDependencies": {

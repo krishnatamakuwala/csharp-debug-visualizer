@@ -86,7 +86,7 @@ describe("Array type variable tests", () => {
             cancellationToken
         );
         provider.getResult().catch((e) => {
-            expect(e).to.be.an.instanceOf(ValueNotFoundError, "The value for the requested variable could not be found.");
+            expect(e).to.be.an.instanceOf(ValueNotFoundError, "CE005: The value for the requested variable could not be found.");
             expect(cancellationToken.callCount).to.be.equal(1);
             expect(ProgressTracker.progress).to.be.equal(0);
         });

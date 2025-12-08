@@ -1,5 +1,5 @@
 /**
- * Class of single variable types
+ * Single variable types
  */
 class SingleVariableType {
     public static readonly char = "System.Char";
@@ -36,7 +36,7 @@ class SingleVariableType {
 }
 
 /**
- * Class of array variable types
+ * Array variable types
  */
 class ArrayVariableType {
     public static readonly charArray = "System.Char[]";
@@ -73,7 +73,7 @@ class ArrayVariableType {
 }
 
 /**
- * Class of datatable related variable types
+ * DataTable related variable types
  */
 class DataTableVariableType {
     public static readonly dataColumn = "System.Data.DataColumn";
@@ -81,6 +81,9 @@ class DataTableVariableType {
     public static readonly dataTable = "System.Data.DataTable";
 }
 
+/**
+ * Other variable types
+ */
 class OtherVariableType {
     public static readonly genericList = "System.Collections.Generic.List";
     public static readonly null = "null";

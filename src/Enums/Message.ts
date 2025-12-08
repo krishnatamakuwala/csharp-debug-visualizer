@@ -1,5 +1,5 @@
 /**
- * Class of static information related messages
+ * Information messages
  */
 class InformationMessage {
     public static readonly visualizing = "Visualizing";
@@ -7,14 +7,14 @@ class InformationMessage {
 }
 
 /**
- * Class of static warning related messages
+ * Warning messages
  */
 class WarningMessage {
     public static readonly cancelled = "Request Cancelled";
 }
 
 /**
- * Class of static error related messages
+ * Error messages
  */
 class ErrorMessage {
     public static readonly editorNotFound = "The requested editor instance does not exist.";

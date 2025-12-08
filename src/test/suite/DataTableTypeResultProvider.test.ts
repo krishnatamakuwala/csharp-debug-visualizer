@@ -13,6 +13,8 @@ import { ProgressTracker } from "../../Models/RequestProgressStatus";
 import { DataTableTypeResultProvider } from "../../Provider/Result/DataTableTypeResultProvider";
 import { createMockDataTableResult } from "../Mocks/MockDataTableResult";
 import { DataTable, DataTableConfig } from "../../Models/Variable";
+import { InvalidRecordsPerPageError, ValueNotFoundError } from "../../Extensions/Errors";
+import { RequestStatusType } from "../../Enums/RequestStatusType";
 
 describe("DataTable type variable tests", () => {
 
@@ -170,5 +172,110 @@ describe("DataTable type variable tests", () => {
         expect(result).to.deep.equal(expectedResult);
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
         expect(ProgressTracker.progress).to.be.equal(60);
+    });
+
+    it("should return value of page 1 with config of All records per page and total count of 17 records when it exists and request is not cancelled", async () => {
+        const variableName = "testVar";
+        mockSession = createMockDebugSession();
+        recordsPerPage = 0;
+        currentPage = 1;
+        totalCount = 17;
+        expectedResult = createMockDataTableResult(mockSession.customRequest as sinon.SinonStub, totalCount, recordsPerPage, currentPage);
+        debugSessionDetails = new DebugSessionDetails(mockSession);
+        const config: DataTableConfig = {
+            currentPage: currentPage,
+            recordsPerPage: recordsPerPage,
+            totalPage: Math.ceil(totalCount / recordsPerPage)
+        }
+        const provider = new DataTableTypeResultProvider(
+            variableName,
+            variableList,
+            debugSessionDetails,
+            progress,
+            cancellationToken,
+            config
+        );
+        const result = await provider.getResult();
+
+        if (!expectedResult.columns || !expectedResult.rows) {
+            throw new Error("Invalid test setup");
+        }
+
+        expect(result).to.deep.equal(expectedResult);
+        expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
+        expect(Math.round(ProgressTracker.progress)).to.be.equal(60); // Used Math.round function to round negligible decimal progress value because of odd number of total records
+    });
+
+    it("should not return value when it does not exists and request is not cancelled", async () => {
+        const variableName = "persons";
+        mockSession = createMockDebugSession();
+        expectedResult = createMockDataTableResult(mockSession.customRequest as sinon.SinonStub, totalCount, recordsPerPage, currentPage);
+        debugSessionDetails = new DebugSessionDetails(mockSession);
+        const provider = new DataTableTypeResultProvider(
+            variableName,
+            variableList,
+            debugSessionDetails,
+            progress,
+            cancellationToken
+        );
+
+        provider.getResult().catch((e) => {
+            expect(e).to.be.an.instanceOf(ValueNotFoundError, "CE005: The value for the requested variable could not be found.");
+            expect(cancellationToken.callCount).to.be.equal(1);
+            expect(ProgressTracker.progress).to.be.equal(0);
+        });
+    });
+
+    it("should not return value when it exists with invalid configuration and request is not cancelled", async () => {
+        const variableName = "persons";
+        mockSession = createMockDebugSession();
+        expectedResult = createMockDataTableResult(mockSession.customRequest as sinon.SinonStub, totalCount, recordsPerPage, currentPage);
+        debugSessionDetails = new DebugSessionDetails(mockSession);
+        const config: DataTableConfig = {
+            currentPage: currentPage,
+            recordsPerPage: -1,
+            totalPage: Math.ceil(totalCount / recordsPerPage)
+        }
+        const provider = new DataTableTypeResultProvider(
+            variableName,
+            variableList,
+            debugSessionDetails,
+            progress,
+            cancellationToken,
+            config
+        );
+
+        provider.getResult().catch((e) => {
+            if (!expectedResult.columns || !expectedResult.rows) {
+                throw new Error("Invalid test setup");
+            }
+            expect(e).to.be.an.instanceOf(InvalidRecordsPerPageError, "CE004: The records-per-page configuration provided is invalid.");
+            expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 2);
+            expect(ProgressTracker.progress).to.be.equal(15);
+        });
+    });
+
+    it("should not return value when request is cancelled", async () => {
+        const variableName = "testVar";
+        cancellationToken.onCall(7).returns(true);
+        mockSession = createMockDebugSession();
+        expectedResult = createMockDataTableResult(mockSession.customRequest as sinon.SinonStub, totalCount, recordsPerPage, currentPage);
+        debugSessionDetails = new DebugSessionDetails(mockSession);
+        const provider = new DataTableTypeResultProvider(
+            variableName,
+            variableList,
+            debugSessionDetails,
+            progress,
+            cancellationToken
+        );
+
+        if (!expectedResult.columns || !expectedResult.rows) {
+            throw new Error("Invalid test setup");
+        }
+        const result = await provider.getResult();
+
+        expect(result).to.be.equal(RequestStatusType.cancelled);
+        expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 1);
+        expect(ProgressTracker.progress).to.be.equal(15);
     });
 });

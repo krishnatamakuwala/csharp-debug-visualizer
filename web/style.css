@@ -56,7 +56,7 @@ input[type=number] {
 .button {
   position: relative;
   height: 40px;
-  width: 40px;
+  width: auto;
   background: var(--theme-color);
   border-radius: 10px;
   border: 0px;
@@ -64,31 +64,35 @@ input[type=number] {
   margin: 10px 0px 10px 10px;
   cursor: pointer;
   display: inline-flex;
+  gap: 0px;
   flex-direction: row;
   align-items: center;
   overflow: hidden;
   white-space: nowrap;
   box-shadow: inset 1.5px 1.5px 2.5px 0.5px rgba(255, 255, 255, 0.25);
   filter: drop-shadow(1.5px 1.5px 2.5px rgba(0, 0, 0, 0.25));
-  transition: width 300ms ease-in-out 0s, background-color 300ms linear 200ms;
+  transition: width 300ms ease-in-out 0s, padding 300ms ease-in-out 0s, gap 300ms ease-in-out 0s;
 }
 
 .button:hover,
 .button:focus-visible {
-  width: 140px;
-  transition: width 300ms ease-in-out 0s, background-color 100ms linear 0s;
+  gap: 8px;
 }
 
-.button:hover>span,
-.button:focus>span {
-  opacity: 100%;
+.button:hover>.btn-name,
+.button:focus-visible>.btn-name {
+  max-width: 200px;
+  opacity: 1;
 }
 
 .btn-name {
+  display: flex;
+  align-items: center;
   height: 100%;
   color: #ffffff;
-  position: absolute;
-  margin-left: 35px;
+  max-width: 0;
+  transition: max-width 300ms ease-in-out 0s, opacity 300ms ease-in-out 50ms;
+  overflow: hidden;
   opacity: 0;
 }
 
@@ -199,7 +203,7 @@ tr {
   width: 20px;
 }
 
-tbody > tr:hover {
+tbody>tr:hover {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
@@ -290,7 +294,8 @@ select.pagination-input {
 
 /*#region* Start: Popup Container */
 .popup-container {
-  display: none;
+  display: flex;
+  pointer-events: none;
   flex-direction: row;
   justify-content: center;
   align-items: center;
@@ -323,9 +328,9 @@ select.pagination-input {
 }
 
 .popup-container.show {
-  display: flex;
   opacity: 1;
   bottom: 30px;
+  pointer-events: auto;
 }
 
 #popup-message {

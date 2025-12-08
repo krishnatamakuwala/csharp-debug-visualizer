@@ -1,4 +1,4 @@
-import { debug, DebugSession, DebugSessionCustomEvent } from "vscode";
+import { debug, DebugSession } from "vscode";
 import { DebugSessionDetails } from "./DebugSessionDetails";
 
 export class DebugProxy {

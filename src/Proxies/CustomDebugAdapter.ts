@@ -41,6 +41,7 @@ export class CustomDebugAdapter {
 
     /**
      * Get active stack frame based on active debug session
+     * @param activeStackItem Active Stackframe Id
      */
     public async updateActiveStackFrame(activeStackItem: DebugThread | DebugStackFrame | undefined) {
         if (this.activeSession !== undefined && activeStackItem instanceof DebugStackFrame) {
