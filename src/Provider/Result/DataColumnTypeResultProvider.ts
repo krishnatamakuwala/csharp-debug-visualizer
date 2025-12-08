@@ -26,6 +26,10 @@ export class DataColumnTypeResultProvider implements IResultProvider {
         this._cancellationToken = cancellationToken;
     }
 
+    /**
+     * Get result for datacolumn type variable
+     * @returns Variable Result
+     */
     async getResult(): Promise<string | RequestStatusType.cancelled> {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;

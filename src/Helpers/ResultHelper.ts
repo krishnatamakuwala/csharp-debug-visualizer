@@ -17,7 +17,9 @@ export class ResultHelper {
     /**
      * Get result based on selected variable
      * @param customDebugAdapter Object of custom debug adapter
-     * @param session Object of debug session details 
+     * @param session Object of debug session details
+     * @param variable Variable
+     * @param config DataTable configuration
      * @param {Progress} progress Progress class to track and manage progress
      */
     public static async getResult(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails, variable: Variable, progress: Progress<{ message?: string | undefined; increment?: number | undefined; }>, config: DataTableConfig | null): Promise<Variable | RequestStatusType.cancelled> {
@@ -85,7 +87,6 @@ export class ResultHelper {
 
     /**
      * Check if request has been cancelled or not
-     * @param {RequestStatusType} requestStatus Request status
      * @returns true - If request has been cancelled, false - If request has not been cancelled
      */
     public static checkIfRequestIsCancelled(): boolean {

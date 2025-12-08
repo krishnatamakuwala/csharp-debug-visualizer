@@ -17,6 +17,10 @@ export class SingleTypeResultProvider implements IResultProvider {
         this._cancellationToken = cancellationToken;
     }
 
+    /**
+     * Get result for single type variable
+     * @returns Variable Result
+     */
     public async getResult(): Promise<string | RequestStatusType.cancelled> {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;

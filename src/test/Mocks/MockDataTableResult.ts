@@ -11,10 +11,10 @@ import { DataTable } from "../../Models/Variable";
  * @returns Expected result
  */
 export function createMockDataTableResult(mockSession: SinonStub, totalCount: number, recordsPerPage: number, currentPage: number): DataTable {
-
-    let count: number = Math.min(recordsPerPage, totalCount - ((currentPage - 1) * recordsPerPage));
-    const totalPage = Math.ceil(totalCount / recordsPerPage);
-    const offset = recordsPerPage * (currentPage - 1);
+    const _recordsPerPage = recordsPerPage === 0 ? totalCount : recordsPerPage;
+    let count: number = Math.min(_recordsPerPage, totalCount - ((currentPage - 1) * _recordsPerPage));
+    const totalPage = Math.ceil(totalCount / _recordsPerPage);
+    const offset = _recordsPerPage * (currentPage - 1);
     if (currentPage <= 0 || currentPage > totalPage) {
         throw new Error("Invalid page config in test");
     }
@@ -72,7 +72,7 @@ export function createMockDataTableResult(mockSession: SinonStub, totalCount: nu
         dataTableConfig: {
             currentPage: currentPage,
             recordsPerPage: recordsPerPage,
-            totalPage: Math.ceil(totalCount / recordsPerPage)
+            totalPage: totalPage
         },
         rows: {
             count: totalCount,

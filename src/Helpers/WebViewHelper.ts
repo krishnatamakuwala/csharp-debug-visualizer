@@ -6,9 +6,11 @@ import path = require("path");
 import { getResultWithConfig, refreshData } from "../extension";
 
 export class WebViewHelper {
+    
     /**
      * Create web view
      * @param context Current context of extension
+     * @param variable Variable
      */
     public createWebView(context: ExtensionContext, variable: Variable) {
         const panel = window.createWebviewPanel(
@@ -18,7 +20,7 @@ export class WebViewHelper {
             {
                 enableScripts: true,
                 enableFindWidget: true,
-                localResourceRoots: [Uri.file(path.join(context.extensionPath, 'src', 'Web'))]
+                localResourceRoots: [Uri.file(path.join(context.extensionPath, 'web'))]
             }
         );
         panel.webview.html = this.getHtml(context);
@@ -52,9 +54,9 @@ export class WebViewHelper {
      * @returns Combined data of HTML, CSS & JS
      */
     public getHtml(context: ExtensionContext): string {
-        let htmlData = readFileSync(path.join(context.extensionPath, 'src', 'Web', 'index.html'), 'utf-8');
-        let cssData = readFileSync(path.join(context.extensionPath, 'src', 'Web', 'style.css'), 'utf-8');
-        let jsData = readFileSync(path.join(context.extensionPath, 'src', 'Web', 'script.js'), 'utf-8');
+        let htmlData = readFileSync(path.join(context.extensionPath, 'web', 'index.html'), 'utf-8');
+        let cssData = readFileSync(path.join(context.extensionPath, 'web', 'style.css'), 'utf-8');
+        let jsData = readFileSync(path.join(context.extensionPath, 'web', 'script.js'), 'utf-8');
         let finalData = htmlData.replace("#css", this.getCss(cssData));
         finalData = finalData.replace("#js", this.getJs(jsData));
         return finalData;

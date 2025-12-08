@@ -31,6 +31,10 @@ export class DataTableTypeResultProvider implements IResultProvider {
         this._dataTableConfig = dataTableConfig;
     }
 
+    /**
+     * Get result for datatable type variable
+     * @returns Variable Result
+     */
     async getResult(): Promise<DataTable | RequestStatusType.cancelled> {
         const dt: DataTable = {
             tableName: "",
@@ -67,12 +71,22 @@ export class DataTableTypeResultProvider implements IResultProvider {
         return dt;
     }
 
+    /**
+     * Get Table Name
+     * @param dtResult DataTable child variable result
+     * @returns Table Name
+     */
     private getTableName(dtResult: IVariable[]): string {
         const commonResultProvider = new CommonResultProvider(this._variableName, dtResult, "TableName", true);
         const tableName = commonResultProvider.getValue();
         return tableName as string;
     }
 
+    /**
+     * Get Columns
+     * @param dtResult DataTable child variable result
+     * @returns Columns
+     */
     private async getColumnList(dtResult: IVariable[]): Promise<Columns | RequestStatusType.cancelled> {
         if (this._cancellationToken()) {
             return RequestStatusType.cancelled;
@@ -97,6 +111,12 @@ export class DataTableTypeResultProvider implements IResultProvider {
         };
     }
 
+    /**
+     * Get child count
+     * @param childResult Child variable result
+     * @param dataTableChildType DataTable child type
+     * @returns Child Count
+     */
     private async getChildCount(childResult: IVariable[], dataTableChildType: DataTableChildType): Promise<number | RequestStatusType.cancelled> {
         const childName = dataTableChildType + "." + "Count";
         const singleResultProvider = new SingleTypeResultProvider(this._variableName, childResult, childName, this._cancellationToken);
@@ -107,6 +127,15 @@ export class DataTableTypeResultProvider implements IResultProvider {
         return parseInt(count);
     }
 
+    /**
+     * Get child list
+     * @param childResult Child variable result
+     * @param dataTableChildType DataTable child type
+     * @param totalProgress Total progress
+     * @param count Count of records
+     * @param index Index of records
+     * @returns CHild list
+     */
     private async getChildList(childResult: IVariable[], dataTableChildType: DataTableChildType, totalProgress: number, count: number | null = null, index: number | null = null): Promise<string[] | RequestStatusType.cancelled> {
         let childName = dataTableChildType + "." + "List";
         let varRef: number | null = null;
@@ -132,6 +161,11 @@ export class DataTableTypeResultProvider implements IResultProvider {
         });
     }
 
+    /**
+     * Get Rows
+     * @param dtResult DataTable child variable result
+     * @returns Rows
+     */
     private async getRowList(dtResult: IVariable[]): Promise<RowsConfig | RequestStatusType.cancelled> {
         let rowList: string[][] | RequestStatusType.cancelled = [];
         if (this._cancellationToken()) {

@@ -17,9 +17,12 @@ class Configuration {
     }
 }
 
+/**
+ * Records Per Page Configuration
+ */
 class RecordsPerPage {
 
-    public static arrRecordPerPage: string[] = ["5", "10", "15", "20", "25", "All"];
+    public static arrRecordPerPage: string[] = ["5", "10", "20", "25", "50", "All"];
 
     /**
      * Configure records per page
@@ -31,9 +34,10 @@ class RecordsPerPage {
 }
 
 /**
- * Themes object containing theme name and its hex code
+ * Theme Configuration
  */
 class Themes {
+
     public static themes: IThemes[] = [
         { themeName: "Oceanic Breeze", hexCode: "#76ABAE" },
         { themeName: "Carbon Mist", hexCode: "#797979" },

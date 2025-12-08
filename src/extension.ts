@@ -13,7 +13,7 @@ import { RequestStatus, ProgressTracker } from './Models/RequestProgressStatus';
 import { WebViewHelper } from './Helpers/WebViewHelper';
 import { Configuration } from './Models/Configuration';
 import { OtherVariableType } from './Enums/VariableType';
-import { EditorNotFoundError, UndefinedSessionError } from './Extensions/Errors';
+import { BaseError, EditorNotFoundError, UndefinedSessionError } from './Extensions/Errors';
 
 // This method is called when extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -74,7 +74,8 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			} catch (error) {
 				RequestStatus.status = RequestStatusType.failed;
-				NotificationManager.showMessage((error as Error).message, MessageType.error);
+				const err = error as BaseError;
+				NotificationManager.showMessage(err.message, MessageType.error);
 			}
 		});
 
@@ -89,6 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
  * @param customDebugAdapter Custom debug adapter
  * @param session Debug session details
  * @param variable Variable
+ * @param [config=null] DataTable configuration
  * @returns 
  */
 export async function withProgress(customDebugAdapter: CustomDebugAdapter, session: DebugSessionDetails, variable: Variable, config: DataTableConfig | null = null): Promise<ProcessResult> {
@@ -153,7 +155,7 @@ export function showResultNotification(requestStatusType: RequestStatusType) {
 
 /**
  * Get result of variable with provided config
- * @param config Variable config
+ * @param config DataTable config
  * @param variable Variable
  * @returns 
  */

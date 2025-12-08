@@ -37,6 +37,10 @@ export class ArrayTypeResultProvider implements IResultProvider {
         this._cancellationToken = cancellationToken;
     }
 
+    /**
+     * Get result for array type variable
+     * @returns Variable Result
+     */
     async getResult(): Promise<string | RequestStatusType.cancelled> {
         let varRef;
         if (this._cancellationToken()) {
