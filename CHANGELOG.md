@@ -3,9 +3,15 @@
 ## 1.1.0
 
 - Optimization: Optimized execution time at the average of 113.87%.
-- Migration: Migrated code from JavaScript to TypeScript to levarage characteristics of Object Oriented Programming(OOPs).
-- Features: Various options for record per page of DataTable variable. Request cancellation functionality.
-- UI Improvment: Improved UI with theme selection, better UI and better user experience in DataTable view.
+- Migration: Migrated code from JavaScript to TypeScript to levarage characteristics of Object Oriented Programming(OOPs), reusability, and type-safety.
+- Features:
+    - Various options for record per page of DataTable variable.
+    - Request cancellation functionality.
+    - Progress bar to show progress of visualization process.
+- UI Improvment:
+    - Improved UI with theme selection.
+    - Minimal and elegant UI.
+    - Improved user experience in DataTable view.
 
 ## 1.0.7
 
