@@ -272,10 +272,7 @@ function exportToCSV() {
     }
     if (variable.result.rows && variable.result.rows.count > 0) {
         variable.result.rows.list.forEach(row => { csvData += row.toString() + "\n"});
-        variable.result.rows.list.map(row => { console.log(row) });
     }
-
-    console.log(csvData);
 
     let anchor = document.createElement('a');
     anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvData);
