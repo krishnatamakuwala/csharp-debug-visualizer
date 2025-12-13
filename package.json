@@ -98,7 +98,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "cross-env NODE_ENV=test node ./out/Test/runTest.js",
+    "test": "cross-env NODE_ENV=test node ./out/Tests/runTest.js",
     "esbuild": "npm run compile && npm run lint && node esbuild.js",
     "vscode:prepublish": "npm run esbuild -- --production",
     "package": "vsce package",
