@@ -1,69 +1,97 @@
 # C# Debug Visualizer
 
-It can be used for visualizing the basic datatype variables, including `DataTable` for C# only. It is simple to install and run, and it is free to use.
+**C# Debug Visualizer** is a lightweight, free, and easy-to-use Visual Studio Code extension for visualizing C# variables during debugging including complex types such as DataTable, DataRow, and DataColumn. It enhances your debugging workflow by offering clean, interactive visualization features right inside VS Code.
 
-## Install
+## Installation
 
-Search **'C# Debug Visualizer'** in the extension tab and install it, and you are ready to use it.
+1. Open Extensions in VS Code.
+2. Search for “C# Debug Visualizer”.
+3. Install the extension, no additional setup required.
+
+You're now ready to visualize C# variables instantly during debugging.
 
 ## Features
 
-It can visualize the system-defined datatypes along with the DataTable, DataColumn, and DataRow from System.Data class and JSON object from Newtonsoft.Json.Linq class.
+### Visualize Variables Instantly
 
-For example, one can select the variable by putting a cursor over it and run the Visualize command in context by opening it by right-clicking or by pressing `Shift+Alt+V`.
+Supports visualization of most system-defined data types, including:
 
-![Run extension with 'Visualize'](images/simple-demo.gif)
+- Primitive types (int, string, bool, etc.)
+- Arrays
+- DataTable, DataRow, DataColumn (from System.Data)
 
-Moreover, you can visualize a data table too, even with the pagination feature.
+How to use:
+- Place your cursor on the variable
+- Right-click and then Visualize _or_
+press `Shift + Alt + V`
 
-![Visualizing DataTable](images/datatable.gif)
+![Run extension with 'Visualize'](media/visualize.gif)
 
-If the result of the variable is too long to scroll and you are *Lazy*, then you can use the 'Word Wrap' feature to *let your fingers and arm rest!*
+### Word Wrap for Long Outputs
 
-![Use word wrap feature](images/word-wrap.gif)
+Long output? Enable Word Wrap with one click to improve readability.
 
-Even feeling lazy to copy the result? Then try the 'Copy to Clipboard' feature, and it will copy the result to the clipboard.
+![Use word wrap feature](media/word-wrap.gif)
 
-![Use copy to clipboard feature](images/copy-to-clipboard.gif)
+### One-Click Copy to Clipboard
 
-Furthermore, you can save the output of the datatable in CSV too, with just one click on 'Save As CSV' and at your preferred location.
+Copy full visualized output to clipboard effortlessly.
 
-![Use save as csv feature](images/save-as-csv.gif)
+![Use copy to clipboard feature](media/copy.gif)
 
-There is an vs code inbuilt searching feature too. You only have to press `Ctrl + F` and then enter your search text.
+### DataTable Viewer with Pagination
 
-![Use searching feature](images/vscode-searching.gif)
+View large DataTables comfortably with built-in pagination.
+
+![Visualizing DataTable](media/datatable.gif)
+
+### Export DataTable to CSV
+
+Save DataTable results directly as a CSV file with Save As CSV.
+
+![Use save as csv feature](media/export.gif)
+
+### Native VS Code Search Support
+
+Use `Ctrl + F` inside the viewer to search through the output.
+
+![Use searching feature](media/search.png)
 
 ## Requirements
 
-There is no need for any additional required resources, just VS code and this extension.
-
-- Your C# code must be in debug mode.
+No external dependencies required.
+Simply ensure:
+- You are using Visual Studio Code
+- Your C# application is running in Debug mode
 
 ## Extension Settings
 
-If you want to change settings for this extension, then you can change it from settings for this extension.
+You can customize the UI to match your preferences through VS Code settings.
 
-For example:
+Example:
 
-![Change primary color](images/user-settings.png)
+![Change primary color](media/settings.png)
 
-This extension contributes the following settings:
+Available setting:
 
-* `charpDebugVisualizer.primaryColor`: Set the primary color for this extension. 
-* Default color is `#454754`.
-
-> Tip: Use those colors, which increase your readability.
+| Setting | Description | Default |
+| ------- | ----------- | ------- |
+| `csharpDebugVisualizer.colorTheme` | Choose color theme according to your preference. | Oceanic Breeze |
+| `csharpDebugVisualizer.recordsPerPage` | Choose records per page for datatable variable type according to your preference. The higher number of records per page will take more time to load. | 10 |
 
 ## Known Issues
 
-This extension is supported only for basic variables like `Integer, Character, String, Boolean, Array, DataRow, DataColumn, DataTable`, and some other variable types. So please be patient and feel free to contact us if you face any issues, because this is an initial version.
+This extension currently supports common and basic .NET types such as:
+- Primitives
+- Arrays
+- DataTable, DataRow, DataColumn
+
+Future versions will expand support for additional data structures.
+If you encounter issues or unsupported types, feel free to reach out, this is an early version and your feedback helps us improve.
 
 ## Release Notes
 
-Check **CHANGELOG** for release details.
-
----
+Refer to the CHANGELOG for detailed version history.
 
 ## Contributors
 - [Krishna Tamakuwala](https://github.com/krishnatamakuwala)

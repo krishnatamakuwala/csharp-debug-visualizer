@@ -4,18 +4,18 @@
   "description": "It can be used for visualizing the basic datatype variables, including DataTable for C# only.",
   "license": "SEE LICENSE IN LICENSE",
   "publisher": "KrishnaPiyush",
-  "icon": "logo/csharp-debug-visualizer.png",
+  "icon": "icon/logo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/krishnatamakuwala/csharp-debug-visualizer.git"
   },
-  "version": "1.0.7",
+  "version": "1.1.0",
   "author": {
     "name": "Krishna Tamakuwala & Piyush Katariya",
     "email": "krishna02122001@gmail.com"
   },
   "engines": {
-    "vscode": "^1.101.0"
+    "vscode": "^1.106.0"
   },
   "categories": [
     "Visualization"
@@ -23,24 +23,49 @@
   "keywords": [
     "Visualizer",
     "Datatable",
+    "Data Table",
+    "DataTable",
     "Debug",
     "C#",
+    "CSharp",
     "Watch Table"
   ],
   "pricing": "Free",
   "homepage": "https://github.com/krishnatamakuwala/csharp-debug-visualizer/blob/main/README.md",
   "activationEvents": [],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "configuration": [
       {
         "title": "C# Debug Visualizer",
         "properties": {
-          "charpDebugVisualizer.primaryColor": {
+          "csharpDebugVisualizer.colorTheme": {
+            "title": "Color Theme",
             "type": "string",
-            "default": "#454754",
-            "scope": "window",
-            "markdownDescription": "Specifiy the hex value (with #) for primary color of C# Debug Visualizer extension. Ex. `#454754`\n\n*Note: Use those colors which increases the readabilty.*"
+            "description": "Choose color theme according to your preference.",
+            "default": "Oceanic Breeze",
+            "enum": [
+              "Oceanic Breeze",
+              "Carbon Mist",
+              "Dreamscapes",
+              "Rosy Blush",
+              "Spring Serenity",
+              "Sunburst Glow"
+            ]
+          },
+          "csharpDebugVisualizer.recordsPerPage": {
+            "title": "Records Per Page",
+            "type": "string",
+            "description": "Choose records per page for datatable variable type according to your preference. The higher number of records per page will take more time to load.",
+            "default": "10",
+            "enum": [
+              "5",
+              "10",
+              "20",
+              "25",
+              "50",
+              "All"
+            ]
           }
         }
       }
@@ -69,27 +94,33 @@
     ]
   },
   "scripts": {
-    "lint": "eslint .",
-    "pretest": "npm run lint",
-    "test": "node ./test/runTest.js",
-    "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run esbuild-base -- --sourcemap",
-    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "test-compile": "tsc -p ./"
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "cross-env NODE_ENV=test node ./out/Test/runTest.js",
+    "esbuild": "npm run compile && npm run lint && node esbuild.js",
+    "vscode:prepublish": "npm run esbuild -- --production",
+    "package": "vsce package",
+    "deploy": "vsce publish"
   },
   "devDependencies": {
+    "@types/chai": "^5.2.3",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.0.3",
-    "@types/vscode": "^1.101.0",
+    "@types/node": "24.x",
+    "@types/sinon": "^21.0.0",
+    "@types/vscode": "^1.106.1",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
     "@vscode/test-electron": "^2.5.2",
-    "esbuild": "^0.25.5",
-    "eslint": "^9.29.0",
-    "glob": "^11.0.3",
-    "mocha": "^11.7.0",
-    "typescript": "^5.8.3"
-  },
-  "dependencies": {
-    "npm": "^11.4.2"
+    "@vscode/vsce": "^3.7.1",
+    "chai": "^6.2.1",
+    "cross-env": "^10.1.0",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.39.1",
+    "glob": "^13.0.0",
+    "mocha": "^11.7.5",
+    "sinon": "^21.0.0",
+    "typescript": "^5.9.3"
   }
 }

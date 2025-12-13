@@ -1,0 +1,342 @@
+:root {
+  --theme-color: #themeColor;
+  --black-icon-color: #000000;
+}
+
+/*#region* Start: Body */
+body {
+  font-family: var(--vscode-editor-font-family);
+  font-weight: var(--vscode-editor-font-weight);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+}
+
+body.vscode-light {
+  color: #000000;
+}
+
+body.vscode-dark {
+  color: #ffffff;
+  --black-icon-color: #ffffff;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  /* Firefox */
+}
+
+/*#endregion*/
+
+/*#region* Start: Action Menu */
+.action-menu {
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1;
+  background-color: var(--vscode-editor-background);
+  position: fixed;
+  height: 65px;
+  right: 0px;
+  width: 100vw;
+  margin-bottom: 5px;
+  box-shadow: 0.5px 0.5px 5px 0px rgba(135, 135, 135, 0.20);
+}
+
+.button-container {
+  margin-right: 10px;
+}
+
+.button {
+  position: relative;
+  height: 40px;
+  width: auto;
+  background: var(--theme-color);
+  border-radius: 10px;
+  border: 0px;
+  padding: 10px;
+  margin: 10px 0px 10px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0px;
+  flex-direction: row;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  box-shadow: inset 1.5px 1.5px 2.5px 0.5px rgba(255, 255, 255, 0.25);
+  filter: drop-shadow(1.5px 1.5px 2.5px rgba(0, 0, 0, 0.25));
+  transition: width 300ms ease-in-out 0s, padding 300ms ease-in-out 0s, gap 300ms ease-in-out 0s;
+}
+
+.button:hover,
+.button:focus-visible {
+  gap: 8px;
+}
+
+.button:hover>.btn-name,
+.button:focus-visible>.btn-name {
+  max-width: 200px;
+  opacity: 1;
+}
+
+.btn-name {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: #ffffff;
+  max-width: 0;
+  transition: max-width 300ms ease-in-out 0s, opacity 300ms ease-in-out 50ms;
+  overflow: hidden;
+  opacity: 0;
+}
+
+/*#endregion*/
+
+/*#region* Start: Svg - Icons */
+.svg {
+  height: 20px;
+  width: 20px;
+}
+
+.svg.size-sm {
+  height: 15px;
+  width: 15px;
+}
+
+.svg.fill-white {
+  fill: #ffffff;
+}
+
+.svg.fill-black {
+  fill: var(--black-icon-color);
+}
+
+.svg.fill-none {
+  fill: none;
+}
+
+.svg.stroke-white {
+  stroke: #ffffff;
+}
+
+.svg.pointer {
+  cursor: pointer;
+}
+
+.svg.icon-success,
+.svg.icon-error {
+  margin: 0 5px;
+  display: none;
+}
+
+/*#endregion*/
+
+/*#region* Start: Data Container */
+.data-container {
+  height: 100%;
+  margin: 65px 3px 20px 3px;
+  flex-grow: 1;
+}
+
+.generic-container {
+  display: flex;
+  gap: 0px 10px;
+}
+
+.datatable-container {
+  height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+.datatable-properties-container {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1px;
+  margin-bottom: 10px;
+}
+
+.custom-table-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 10px;
+  box-shadow: 0px 2px 1px 0.5px rgba(0, 0, 0, 0.2),
+    0px 1px 1px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+}
+
+.table-container {
+  flex-grow: 1;
+  height: 100px;
+  overflow: auto;
+}
+
+table {
+  border-collapse: collapse;
+  box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2),
+    0px 1px 1px 0px rgba(0, 0, 0, 0.14),
+    0px 1px 3px 0px rgba(0, 0, 0, 0.12);
+  width: 100%;
+}
+
+thead {
+  background-color: var(--vscode-editor-background);
+  position: sticky;
+  top: 0;
+  border-bottom: 2px solid rgba(135, 135, 135, 0.5);
+}
+
+th {
+  padding: 16px;
+  text-align: left;
+}
+
+tr {
+  border-bottom: 1px solid rgba(135, 135, 135, 0.5);
+  width: 20px;
+}
+
+tbody>tr:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+tr:last-child {
+  border-bottom: none;
+}
+
+td {
+  padding: 16px;
+  text-align: left;
+}
+
+.datatable-pagination-container {
+  display: flex;
+  padding: 5px 10px;
+  height: 48px;
+  border-radius: 10px;
+  background-color: var(--vscode-editor-background);
+}
+
+.pagination-page-size-container {
+  display: flex;
+  align-items: center;
+}
+
+.pagination-input {
+  margin-left: 5px;
+  height: 20px;
+  width: 35px;
+  border-radius: 10px;
+  padding: 5px;
+  color: white;
+  background: none;
+  outline: none;
+  border: 2px solid var(--theme-color);
+}
+
+select.pagination-input {
+  background: var(--vscode-editor-background);
+  height: 35px;
+  width: auto;
+}
+
+.pagination-input:focus {
+  box-shadow: 0px 0px 4px var(--theme-color);
+}
+
+.pagination-page-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-grow: 1;
+  column-gap: 5px;
+}
+
+.pagination-btn {
+  background-color: var(--theme-color);
+  height: 25px;
+  width: 25px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  filter: drop-shadow(1.5px 1.5px 2.5px rgba(0, 0, 0, 0.25));
+  box-shadow: inset 1.5px 1.5px 2.5px 0.5px rgba(255, 255, 255, 0.25);
+  border: 0px;
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.result {
+  white-space: nowrap;
+  color: burlywood;
+}
+
+.datatable-properties {
+  height: 30px;
+  display: flex;
+  flex-direction: row;
+  column-gap: 5px;
+}
+
+/*#endregion*/
+
+/*#region* Start: Popup Container */
+.popup-container {
+  display: flex;
+  pointer-events: none;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+  padding: 0 10px;
+  box-sizing: border-box;
+  opacity: 0;
+  min-width: 250px;
+  max-width: 300px;
+  margin-left: -125px;
+  background-color: var(--vscode-editor-background);
+  text-align: center;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #25ae88;
+  position: fixed;
+  z-index: 1;
+  left: 50%;
+  bottom: 0px;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.25));
+  transition: opacity 0.5s, bottom 0.5s;
+}
+
+.popup-container.success {
+  border-color: #25ae88;
+}
+
+.popup-container.error {
+  border-color: #d75a4a;
+}
+
+.popup-container.show {
+  opacity: 1;
+  bottom: 30px;
+  pointer-events: auto;
+}
+
+#popup-message {
+  text-wrap: pretty;
+  min-width: 205px;
+  max-width: 255px;
+}
+
+/*#endregion*/
