@@ -1,6 +1,6 @@
 import { SinonStub } from "sinon";
 import { createMockVariable } from "./MockVariable";
-import { DataTable } from "../../Models/Variable";
+import { DataTable } from "../../models/Variable";
 
 /**
  * Create mock datatable result

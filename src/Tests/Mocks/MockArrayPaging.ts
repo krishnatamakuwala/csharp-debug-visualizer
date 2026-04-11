@@ -1,5 +1,5 @@
 import { SinonStub } from "sinon";
-import { IVariable } from "../../Proxies/DebugSessionDetails";
+import { IVariable } from "../../debug/debugSession";
 import { createMockVariable } from "./MockVariable";
 
 export function mockArrayPaging(sessionStub: SinonStub, count: number, countPerPage: number, variablesArr: IVariable[], arrayType: ArrayType = ArrayType.array) {

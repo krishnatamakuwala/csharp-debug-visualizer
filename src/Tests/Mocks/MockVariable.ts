@@ -1,4 +1,4 @@
-import { IVariable } from "../../Proxies/DebugSessionDetails";
+import { IVariable } from "../../debug/debugSession";
 
 export function createMockVariable(
     name: string,

@@ -1,38 +1,36 @@
-import { InvalidRecordsPerPageError, InvalidThemeError } from "../Extensions/Errors";
-import { RecordsPerPage, Themes } from "../Models/Configuration";
+import { InvalidRecordsPerPageError, InvalidThemeError } from "../errors/errors";
+import { AVAILABLE_THEMES, VALID_RECORDS_PER_PAGE } from "../config/configuration";
 
 export class Validator {
 
     /**
      * Validates theme color
      * @param colorThemeName Color theme name
-     * @returns Color theme if valid else throws an error
+     * @returns Hex code if valid, else throws InvalidThemeError
      */
     public static validateThemeColor(colorThemeName: string | undefined): string {
         if (colorThemeName === undefined) {
             throw new InvalidThemeError();
         }
-        const colorTheme = Themes.themes.filter(x => x.themeName === colorThemeName)[0].hexCode;
-        if (colorTheme === undefined || colorTheme === null) {
+        const matchedTheme = AVAILABLE_THEMES.filter(x => x.themeName === colorThemeName);
+        if (!matchedTheme.length || !matchedTheme[0].hexCode) {
             throw new InvalidThemeError();
-        } else {
-            return colorTheme;
         }
+        return matchedTheme[0].hexCode;
     }
 
     /**
      * Validates records per page
      * @param recordsPerPage Records Per Page
-     * @returns Records per page if valid else throws an error
+     * @returns Numeric value if valid (0 = "All"), else throws InvalidRecordsPerPageError
      */
     public static validateRecordsPerPage(recordsPerPage: string | undefined): number {
-        if (recordsPerPage === undefined || !RecordsPerPage.arrRecordPerPage.includes(recordsPerPage)) {
+        if (recordsPerPage === undefined || !VALID_RECORDS_PER_PAGE.includes(recordsPerPage)) {
             throw new InvalidRecordsPerPageError();
-        } else {
-            if (recordsPerPage === "All") {
-                return 0;
-            }
-            return parseInt(recordsPerPage);
         }
+        if (recordsPerPage === "All") {
+            return 0;
+        }
+        return parseInt(recordsPerPage);
     }
 }

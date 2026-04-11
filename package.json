@@ -15,7 +15,8 @@
     "email": "krishna02122001@gmail.com"
   },
   "engines": {
-    "vscode": "^1.106.0"
+    "vscode": "^1.106.0",
+    "node": ">=20.0.0"
   },
   "categories": [
     "Visualization"
@@ -97,7 +98,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint src",
     "test": "cross-env NODE_ENV=test node ./out/Tests/runTest.js",
     "esbuild": "npm run compile && npm run lint && node esbuild.js",
     "vscode:prepublish": "npm run esbuild -- --production",

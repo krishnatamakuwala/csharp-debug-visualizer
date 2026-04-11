@@ -1,7 +1,20 @@
 import { TextEditor } from "vscode";
 import { Range } from "vscode";
 
+/** Matches a valid C# identifier (including dotted paths like foo.bar.baz) */
+const VALID_CSHARP_IDENTIFIER = /^[a-zA-Z_@][a-zA-Z0-9_]*(\.[a-zA-Z_@][a-zA-Z0-9_]*)*$/;
+
 export class Editor {
+
+    /**
+     * Validate that a variable name is a safe C# identifier before DAP expression evaluation.
+     * Prevents expression injection via malformed selections.
+     * @param varName The variable name to validate
+     * @returns true if the name is a valid C# identifier or dotted path
+     */
+    public static isValidVariableName(varName: string): boolean {
+        return VALID_CSHARP_IDENTIFIER.test(varName);
+    }
 
     /**
      * Get selected variable name based on cursor position
@@ -10,12 +23,12 @@ export class Editor {
      */
     public static getSelectedVariable(editor: TextEditor) {
         const cursorPosition = editor.selection.active;
-        var charPosition = cursorPosition.character - 1;
-        var previousCharacter = "";
-        var startCursorPosition = cursorPosition.character;
-        var nextCharacter = "";
-        var endCursorPosition = cursorPosition.character;
-        var charBreakArray = ['', ' ', '=', '(', ')', '{', '}', '[', ']', '.', ',', ';', '+', '-', '*', '/', '\\', '!', '`', '@', '#', '$', '~', '%', '^', '&', ':', '<', '>', '?', '|', '"', '\''];
+        let charPosition = cursorPosition.character - 1;
+        let previousCharacter = "";
+        let startCursorPosition = cursorPosition.character;
+        let nextCharacter = "";
+        let endCursorPosition = cursorPosition.character;
+        const charBreakArray = ['', ' ', '=', '(', ')', '{', '}', '[', ']', '.', ',', ';', '+', '-', '*', '/', '\\', '!', '`', '@', '#', '$', '~', '%', '^', '&', ':', '<', '>', '?', '|', '"', '\''];
         do {
             previousCharacter = editor.document.getText(new Range(cursorPosition.line, charPosition, cursorPosition.line, charPosition + 1));
             if(charBreakArray.includes(previousCharacter)) {
@@ -24,7 +37,7 @@ export class Editor {
             startCursorPosition = charPosition;
             charPosition--;
         } while(!charBreakArray.includes(previousCharacter));
-        var charPosition = cursorPosition.character + 1;
+        charPosition = cursorPosition.character + 1;
         do {
             nextCharacter = editor.document.getText(new Range(cursorPosition.line, charPosition, cursorPosition.line, charPosition - 1));
             if(charBreakArray.includes(nextCharacter)) {
@@ -35,31 +48,5 @@ export class Editor {
         } while(!charBreakArray.includes(nextCharacter));
 
         return editor.document.getText(new Range(cursorPosition.line, startCursorPosition, cursorPosition.line, endCursorPosition));
-    }
-
-    /**
-     * Remove leading and trailling ""
-     * @param str Input string
-     * @returns Lead and trail removed string
-     */
-    public static removeLeadingAndTrailingQuotes(str: string) {
-        if(str.startsWith("\"") && str.endsWith("\""))
-        {
-            str = str.slice(1, -1);
-        }
-        return str;
-    }
-
-    /**
-     * Remove leading and trailling {}
-     * @param str Input string
-     * @returns Lead and trail removed string
-     */
-    public static removeLeadingAndTrailingCBraces(str: string) {
-        if(str.startsWith("{") && str.endsWith("}"))
-        {
-            str = str.slice(1, -1);
-        }
-        return str;
     }
 }

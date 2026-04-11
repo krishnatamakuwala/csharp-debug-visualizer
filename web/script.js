@@ -1,336 +1,70 @@
-//#region Initialzation
+const POPUP_AUTO_CLOSE_MS = 3200;
+const POPUP_TRANSITION_MS = 500;
 
-//#region Generic
-var genericContainer = document.getElementById("generic-container");
-var genericName = document.getElementById("generic-name");
-var genericResult = document.getElementById("generic-result");
+//#region DOM References
+const dom = {
+    generic: {
+        container: document.getElementById("generic-container"),
+        name: document.getElementById("generic-name"),
+        result: document.getElementById("generic-result"),
+    },
+    datatable: {
+        container: document.getElementById("datatable-container"),
+        name: document.getElementById("datatable-name"),
+        tableName: document.getElementById("table-name"),
+        columnCount: document.getElementById("column-count"),
+        rowCount: document.getElementById("row-count"),
+        table: document.getElementById("datatable"),
+        columns: document.getElementById("datatable-columns"),
+        rows: document.getElementById("datatable-rows"),
+    },
+    pagination: {
+        totalPage: document.getElementById("pagination-total-page"),
+        currentPage: document.getElementById("pagination-current-page"),
+        recordsPerPage: document.getElementById("records-per-page"),
+        firstBtn: document.getElementById("first-page-btn"),
+        prevBtn: document.getElementById("previous-page-btn"),
+        nextBtn: document.getElementById("next-page-btn"),
+        lastBtn: document.getElementById("last-page-btn"),
+    },
+    buttons: {
+        wordWrap: document.getElementById("btn-word-wrap"),
+        copy: document.getElementById("btn-copy"),
+        refresh: document.getElementById("btn-refresh"),
+        export: document.getElementById("btn-export"),
+    },
+    popup: {
+        container: document.getElementById("popup-container"),
+        message: document.getElementById("popup-message"),
+        iconSuccess: document.getElementById("icon-success"),
+        iconError: document.getElementById("icon-error"),
+        iconClose: document.getElementById("icon-close"),
+    }
+};
 //#endregion
 
-//#region DataTable
-var datatableContainer = document.getElementById("datatable-container");
-var dataTableName = document.getElementById("datatable-name");
-var tableName = document.getElementById("table-name");
-var columnCount = document.getElementById("column-count");
-var rowCount = document.getElementById("row-count");
-var datatable = document.getElementById("datatable");
-var datatableColumns = document.getElementById("datatable-columns");
-var datatableRows = document.getElementById("datatable-rows");
-var totalPage = document.getElementById("pagination-total-page");
-var currentPage = document.getElementById("pagination-current-page");
-var recordsPerPage = document.getElementById("records-per-page");
-var firstPageBtn = document.getElementById("first-page-btn");
-var previousPageBtn = document.getElementById("previous-page-btn");
-var nextPageBtn = document.getElementById("next-page-btn");
-var lastPageBtn = document.getElementById("last-page-btn");
-var oldCurrentPage = currentPage.value;
-//#endregion
-
-//#region Functions
-var btnWordWrap = document.getElementById("btn-word-wrap");
-var btnCopy = document.getElementById("btn-copy");
-var btnRefresh = document.getElementById("btn-refresh");
-var btnExport = document.getElementById("btn-export");
-//#endregion
-
-//#region Popup Notification
-var popupContainer = document.getElementById("popup-container");
-var popupMessage = document.getElementById("popup-message");
-var iconSuccess = document.getElementById("icon-success");
-var iconError = document.getElementById("icon-error");
-var iconClose = document.getElementById("icon-close");
+//#region State
+const state = {
+    variable: null,
+    isProcessing: false,
+    oldCurrentPage: dom.pagination.currentPage.value,
+    popupTimeout: null,
+    streamingRowIndex: 0,
+};
 //#endregion
 
 const vscode = acquireVsCodeApi();
-var popupTimeout;
-var isProcessing = false;
-var variable;
-//#endregion
 
-getData();
-
-var dataTableConfig = {
-    recordsPerPage: 10,
-    currentPage: 1,
-    totalPage: 0
+// Restore persisted state if available
+const previousState = vscode.getState();
+if (previousState && previousState.variable) {
+    state.variable = previousState.variable;
 }
 
-//#region Listners
-window.addEventListener("message", (event) => {
-    const message = event.data; // The JSON data our extension sent
-    switch (message.command) {
-        case "setData":
-            setData(message.data);
-            break;
-    }
-});
-
-btnWordWrap.addEventListener("click", function () {
-    wrapText();
-});
-
-btnCopy.addEventListener("click", function () {
-    copyToClipBoard();
-});
-
-btnRefresh.addEventListener("click", function () {
-    refreshData();
-});
-
-btnExport.addEventListener("click", function () {
-    exportToCSV();
-});
-
-iconClose.addEventListener("click", function () {
-    clearTimeout(popupTimeout);
-    closePopup();
-});
-
-currentPage.addEventListener("keyup", function (event) {
-    if (isProcessing) {
-        currentPage.value = oldCurrentPage;
-        return;
-    }
-    if (event.key === "Enter") {
-        if (Number(currentPage.value) % 1 !== 0) {
-            showNotification("Current page can not be a decimal value.", "error", true);
-            currentPage.value = oldCurrentPage;
-            return;
-        } else if (Number(currentPage.value) < 1) {
-            showNotification("Current page can not be less than 1.", "error", true);
-            currentPage.value = oldCurrentPage;
-            return;
-        } else if (Number(currentPage.value) > Number(totalPage.innerHTML)) {
-            showNotification("Current page can not be more than total pages.", "error", true);
-            currentPage.value = oldCurrentPage;
-            return;
-        } else {
-            getDataTableWithConfig();
-        }
-    }
-});
-
-recordsPerPage.addEventListener("change", function () {
-    if (isProcessing) {
-        return;
-    }
-    getDataTableWithConfig();
-});
-
-firstPageBtn.addEventListener("click", function () {
-    if (isProcessing) {
-        return;
-    }
-    if (Number(currentPage.value) > 1) {
-        currentPage.value = 1;
-        oldCurrentPage = currentPage.value;
-        getDataTableWithConfig();
-        togglePreviousOrNextPageBtn();
-    }
-});
-
-previousPageBtn.addEventListener("click", function () {
-    if (isProcessing) {
-        return;
-    }
-    if (Number(currentPage.value) > 1) {
-        currentPage.value = Number(currentPage.value) - 1;
-        oldCurrentPage = currentPage.value;
-        getDataTableWithConfig();
-        togglePreviousOrNextPageBtn();
-    }
-});
-
-nextPageBtn.addEventListener("click", function () {
-    if (isProcessing) {
-        return;
-    }
-    if (Number(currentPage.value) < Number(totalPage.innerHTML)) {
-        currentPage.value = Number(currentPage.value) + 1;
-        oldCurrentPage = currentPage.value;
-        getDataTableWithConfig();
-        togglePreviousOrNextPageBtn();
-    }
-});
-
-lastPageBtn.addEventListener("click", function () {
-    if (isProcessing) {
-        return;
-    }
-    if (Number(currentPage.value) < Number(totalPage.innerHTML)) {
-        currentPage.value = Number(totalPage.innerHTML);
-        oldCurrentPage = currentPage.value;
-        getDataTableWithConfig();
-        togglePreviousOrNextPageBtn();
-    }
-});
-//#endregion
-
-function setData(_variable) {
-    if (_variable.type === "System.Data.DataTable") {
-        hideElement(genericContainer);
-        hideElement(btnCopy);
-        hideElement(btnWordWrap);
-        dataTableName.innerHTML = _variable.varName;
-        tableName.innerHTML = _variable.result.tableName;
-        columnCount.innerHTML = _variable.result.columns.count;
-        rowCount.innerHTML = _variable.result.rows.count;
-        recordsPerPage.value = _variable.result.dataTableConfig.recordsPerPage;
-        currentPage.value = _variable.result.dataTableConfig.currentPage;
-        oldCurrentPage = currentPage.value;
-        totalPage.innerHTML = _variable.result.dataTableConfig.totalPage;
-        createTable(_variable.result);
-        togglePreviousOrNextPageBtn();
-    } else {
-        hideElement(datatableContainer);
-        hideElement(btnExport);
-        genericName.innerHTML = _variable.varName;
-        genericResult.innerHTML = _variable.result;
-    }
-    variable = _variable;
-    isProcessing = false;
-}
-
-function createTable(dt) {
-    createColumns(dt.columns);
-    createRows(dt.rows);
-}
-
-function createColumns(columns) {
-    let _columns = "<tr>";
-    _columns += "<th></th>";
-    columns.list.forEach((column) => {
-        _columns += "<th>" + column + "</th>";
-    });
-    _columns += "</tr>";
-    datatableColumns.innerHTML = _columns;
-}
-
-function createRows(rows) {
-    let _rows = "";
-    let i = 1;
-    rows.list.forEach((row) => {
-        _rows += "<tr>";
-        _rows += '<td>' + (((currentPage.value - 1) * recordsPerPage.value) + i) + "</td>";
-        row.forEach((data) => {
-            _rows += "<td>" + data + "</td>";
-        });
-        _rows += "</tr>";
-        i++;
-    });
-
-    datatableRows.innerHTML = _rows;
-}
-
-function getDataTableWithConfig() {
-    const config = {
-        currentPage: Number(currentPage.value),
-        recordsPerPage: Number(recordsPerPage.value),
-        totalPage: Number(totalPage.innerHTML)
-    }
-    getDataWithConfig(config);
-}
-
-//#region Control - Functions
-function copyToClipBoard() {
-    var result = genericResult.innerHTML;
-    var message = "Copied to clipboard.";
-    var status = "success";
-
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(result);
-    } else {
-        message = "Error while copying to clipboard.";
-        status = "error";
-    }
-
-    showNotification(message, status, true);
-}
-
-function wrapText() {
-    if (genericResult.style.whiteSpace === "normal") {
-        genericResult.style.whiteSpace = "nowrap"
-    } else {
-        genericResult.style.whiteSpace = "normal"
-    }
-}
-
-function refreshData() {
-    if (isProcessing) {
-        return;
-    }
-    isProcessing = true;
-    vscode.postMessage({
-        command: "refreshData"
-    });
-}
-
-function exportToCSV() {
-    let csvData = '';
-    if (variable.result.columns && variable.result.columns.count > 0) {
-        csvData += variable.result.columns.list.toString();
-        csvData += "\n";
-    }
-    if (variable.result.rows && variable.result.rows.count > 0) {
-        variable.result.rows.list.forEach(row => { csvData += row.toString() + "\n"});
-    }
-
-    let anchor = document.createElement('a');
-    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvData);
-    anchor.target = '_blank';
-    anchor.download = 'DataTable.csv';
-    anchor.click();
-    showNotification("Exported in CSV.", "success", true);
-}
-//#endregion
-
-function showNotification(message, type, isAutoClosable) {
-    if (!popupContainer.classList.contains("show")) {
-        if (type === "success") {
-            popupContainer.classList.add("success");
-            showElement(iconSuccess);
-        } else if (type === "error") {
-            popupContainer.classList.add("error");
-            showElement(iconError);
-        }
-        popupMessage.innerHTML = message;
-        popupContainer.classList.toggle("show");
-        if (isAutoClosable) {
-            popupTimeout = setTimeout(function () {
-                closePopup();
-            }, 3200);
-        }
-    }
-}
-
-function closePopup() {
-    popupContainer.classList.toggle("show");
-    setTimeout(function () {
-        popupContainer.classList.remove("success");
-        popupContainer.classList.remove("error");
-        hideElement(iconSuccess);
-        hideElement(iconError);
-    }, 500);
-}
-
-function getDataWithConfig(_config) {
-    if (isProcessing) {
-        return;
-    }
-    isProcessing = true;
-    vscode.postMessage({
-        command: "getData",
-        text: JSON.stringify(_config)
-    });
-}
-
-function getData() {
-    if (isProcessing) {
-        return;
-    }
-    isProcessing = true;
-    vscode.postMessage({
-        command: "getData"
-    });
+//#region Utilities
+function escapeHtml(str) {
+    if (str === null || str === undefined) { return ""; }
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
 function hideElement(element) {
@@ -346,18 +80,387 @@ function togglePaginationBtn(btn, isDisabled) {
 }
 
 function togglePreviousOrNextPageBtn() {
-    if (Number(currentPage.value) <= 1) {
-        togglePaginationBtn(previousPageBtn, true);
-        togglePaginationBtn(firstPageBtn, true);
-    } else {
-        togglePaginationBtn(previousPageBtn, false);
-        togglePaginationBtn(firstPageBtn, false);
+    const cur = Number(dom.pagination.currentPage.value);
+    const total = Number(dom.pagination.totalPage.textContent);
+    togglePaginationBtn(dom.pagination.prevBtn, cur <= 1);
+    togglePaginationBtn(dom.pagination.firstBtn, cur <= 1);
+    togglePaginationBtn(dom.pagination.nextBtn, cur >= total);
+    togglePaginationBtn(dom.pagination.lastBtn, cur >= total);
+}
+//#endregion
+
+//#region Table Rendering Helpers
+function prepareTableView(varName) {
+    hideElement(dom.generic.container);
+    hideElement(dom.buttons.copy);
+    hideElement(dom.buttons.wordWrap);
+    hideElement(dom.buttons.export);
+    dom.datatable.name.textContent = varName;
+}
+
+function buildColumnHeaderHtml(columns) {
+    let html = "<tr><th></th>";
+    columns.forEach((col) => { html += "<th>" + escapeHtml(col) + "</th>"; });
+    html += "</tr>";
+    return html;
+}
+
+function buildTableHtml(columns, rows, emptyMessage) {
+    dom.datatable.columns.innerHTML = buildColumnHeaderHtml(columns);
+
+    if (!rows || rows.length === 0) {
+        dom.datatable.rows.innerHTML = '<tr><td colspan="' + (columns.length + 1) + '" style="color: #888; padding: 12px; text-align: center;">' + escapeHtml(emptyMessage) + '</td></tr>';
+        return;
     }
-    if (Number(currentPage.value) >= Number(totalPage.innerHTML)) {
-        togglePaginationBtn(nextPageBtn, true);
-        togglePaginationBtn(lastPageBtn, true);
+    let rowHtml = "";
+    rows.forEach((row, i) => {
+        rowHtml += "<tr><td>" + (i + 1) + "</td>";
+        row.forEach((cell) => { rowHtml += "<td>" + escapeHtml(cell) + "</td>"; });
+        rowHtml += "</tr>";
+    });
+    dom.datatable.rows.innerHTML = rowHtml;
+}
+//#endregion
+
+//#region Renderers (data-driven)
+const renderers = {
+    dictionary(varName, data) {
+        prepareTableView(varName);
+        dom.datatable.tableName.textContent = "Dictionary";
+        dom.datatable.columnCount.textContent = "2 (Key, Value)";
+        dom.datatable.rowCount.textContent = data.count;
+        const rows = data.entries.map((e) => [e.key, e.value]);
+        buildTableHtml(["Key", "Value"], rows, "Empty dictionary");
+    },
+
+    dataset(varName, data) {
+        prepareTableView(varName);
+        dom.datatable.tableName.textContent = data.dataSetName || "DataSet";
+        dom.datatable.columnCount.textContent = data.tableCount + " table(s)";
+        dom.datatable.rowCount.textContent = "";
+        const rows = data.tables.map((t) => [t.name, String(t.columns), String(t.rows)]);
+        buildTableHtml(["Table Name", "Columns", "Rows"], rows, "Empty DataSet");
+    },
+
+    object(varName, data) {
+        prepareTableView(varName);
+        dom.datatable.tableName.textContent = "Object Properties";
+        dom.datatable.columnCount.textContent = data.propertyCount + " properties";
+        dom.datatable.rowCount.textContent = "";
+        const rows = data.properties.map((p) => [p.name, p.value]);
+        buildTableHtml(["Property", "Value"], rows, "No properties");
+    }
+};
+//#endregion
+
+//#region Core Data Handlers
+function setData(_variable) {
+    try {
+        if (_variable.type === "System.Data.DataTable") {
+            renderDataTable(_variable);
+        } else if (typeof _variable.result === "string" && _variable.result.startsWith("{\"type\":")) {
+            try {
+                const parsed = JSON.parse(_variable.result);
+                const renderer = renderers[parsed.type];
+                if (renderer) {
+                    renderer(_variable.varName, parsed);
+                } else {
+                    renderGeneric(_variable);
+                }
+            } catch {
+                renderGeneric(_variable);
+            }
+        } else {
+            renderGeneric(_variable);
+        }
+        state.variable = _variable;
+        vscode.setState({ variable: _variable });
+    } catch (err) {
+        showError("Error rendering data: " + (err.message || err));
+        console.error("[C# Debug Visualizer] setData error:", err);
+    }
+    state.isProcessing = false;
+}
+
+function renderDataTable(_variable) {
+    prepareTableView(_variable.varName);
+    showElement(dom.buttons.export);
+
+    if (!_variable.result || typeof _variable.result !== "object") {
+        showError("No data received for DataTable. Result: " + JSON.stringify(_variable.result));
+        return;
+    }
+    if (!_variable.result.columns || !_variable.result.rows) {
+        showError("DataTable result is incomplete. columns=" + JSON.stringify(_variable.result.columns) + ", rows=" + JSON.stringify(_variable.result.rows));
+        return;
+    }
+
+    dom.datatable.tableName.textContent = _variable.result.tableName;
+    dom.datatable.columnCount.textContent = _variable.result.columns.count;
+    dom.datatable.rowCount.textContent = _variable.result.rows.count;
+    dom.pagination.recordsPerPage.value = _variable.result.dataTableConfig.recordsPerPage;
+    dom.pagination.currentPage.value = _variable.result.dataTableConfig.currentPage;
+    state.oldCurrentPage = dom.pagination.currentPage.value;
+    dom.pagination.totalPage.textContent = _variable.result.dataTableConfig.totalPage;
+    createDataTableColumns(_variable.result.columns);
+    createDataTableRows(_variable.result.rows);
+    togglePreviousOrNextPageBtn();
+}
+
+function renderGeneric(_variable) {
+    hideElement(dom.datatable.container);
+    hideElement(dom.buttons.export);
+    dom.generic.name.textContent = _variable.varName;
+    dom.generic.result.textContent = _variable.result;
+}
+
+function createDataTableColumns(columns) {
+    dom.datatable.columns.innerHTML = buildColumnHeaderHtml(columns.list);
+}
+
+function createDataTableRows(rows) {
+    let html = "";
+    let i = 1;
+    rows.list.forEach((row) => {
+        html += "<tr>";
+        html += '<td>' + (((dom.pagination.currentPage.value - 1) * dom.pagination.recordsPerPage.value) + i) + "</td>";
+        row.forEach((data) => { html += "<td>" + escapeHtml(data) + "</td>"; });
+        html += "</tr>";
+        i++;
+    });
+    dom.datatable.rows.innerHTML = html;
+}
+//#endregion
+
+//#region Streaming / Progressive Rendering
+function setDataTableHeader(data) {
+    prepareTableView(data.varName);
+    showElement(dom.buttons.export);
+    dom.datatable.tableName.textContent = data.tableName;
+    dom.datatable.columnCount.textContent = data.columnCount;
+    dom.datatable.rowCount.textContent = data.rowCount;
+    if (data.dataTableConfig) {
+        dom.pagination.recordsPerPage.value = data.dataTableConfig.recordsPerPage;
+        dom.pagination.currentPage.value = data.dataTableConfig.currentPage;
+        state.oldCurrentPage = dom.pagination.currentPage.value;
+        dom.pagination.totalPage.textContent = data.dataTableConfig.totalPage;
+    }
+    if (data.columns && data.columns.length > 0) {
+        dom.datatable.columns.innerHTML = buildColumnHeaderHtml(data.columns);
+    }
+    dom.datatable.rows.innerHTML = '<tr><td colspan="100" style="color: #888; padding: 12px; text-align: center;">Loading rows...</td></tr>';
+    state.streamingRowIndex = 0;
+}
+
+function appendRows(data) {
+    if (state.streamingRowIndex === 0) {
+        dom.datatable.rows.innerHTML = "";
+    }
+    let html = "";
+    const startIndex = data.startIndex || state.streamingRowIndex;
+    let i = startIndex + 1;
+    data.rows.forEach((row) => {
+        html += "<tr><td>" + i + "</td>";
+        row.forEach((cell) => { html += "<td>" + escapeHtml(cell) + "</td>"; });
+        html += "</tr>";
+        i++;
+    });
+    dom.datatable.rows.innerHTML += html;
+    state.streamingRowIndex += data.rows.length;
+}
+
+function onFetchComplete() {
+    togglePreviousOrNextPageBtn();
+    state.isProcessing = false;
+}
+//#endregion
+
+//#region Error Display
+function showError(message) {
+    hideElement(dom.generic.container);
+    hideElement(dom.buttons.copy);
+    hideElement(dom.buttons.wordWrap);
+    dom.datatable.tableName.textContent = "";
+    dom.datatable.columnCount.textContent = "";
+    dom.datatable.rowCount.textContent = "";
+    dom.datatable.columns.innerHTML = "";
+    dom.datatable.rows.innerHTML = '<tr><td colspan="100" style="color: #f44336; padding: 12px; text-align: center;">' + escapeHtml(message) + '</td></tr>';
+}
+//#endregion
+
+//#region Actions
+function copyToClipBoard() {
+    const result = dom.generic.result.textContent;
+    let message = "Copied to clipboard.";
+    let notifType = "success";
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(result);
     } else {
-        togglePaginationBtn(nextPageBtn, false);
-        togglePaginationBtn(lastPageBtn, false);
+        message = "Error while copying to clipboard.";
+        notifType = "error";
+    }
+    showNotification(message, notifType, true);
+}
+
+function wrapText() {
+    dom.generic.result.style.whiteSpace = dom.generic.result.style.whiteSpace === "normal" ? "nowrap" : "normal";
+}
+
+function refreshDataAction() {
+    if (state.isProcessing) { return; }
+    state.isProcessing = true;
+    vscode.postMessage({ command: "refreshData" });
+}
+
+function exportToCSV() {
+    if (!state.variable || !state.variable.result) { return; }
+    let csvData = '';
+    if (state.variable.result.columns && state.variable.result.columns.count > 0) {
+        csvData += state.variable.result.columns.list.toString() + "\n";
+    }
+    if (state.variable.result.rows && state.variable.result.rows.count > 0) {
+        state.variable.result.rows.list.forEach(row => { csvData += row.toString() + "\n"; });
+    }
+    let anchor = document.createElement('a');
+    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvData);
+    anchor.target = '_blank';
+    anchor.download = 'DataTable.csv';
+    anchor.click();
+    showNotification("Exported in CSV.", "success", true);
+}
+//#endregion
+
+//#region Notifications
+function showNotification(message, type, isAutoClosable) {
+    if (!dom.popup.container.classList.contains("show")) {
+        if (type === "success") {
+            dom.popup.container.classList.add("success");
+            showElement(dom.popup.iconSuccess);
+        } else if (type === "error") {
+            dom.popup.container.classList.add("error");
+            showElement(dom.popup.iconError);
+        }
+        dom.popup.message.textContent = message;
+        dom.popup.container.classList.toggle("show");
+        if (isAutoClosable) {
+            state.popupTimeout = setTimeout(() => closePopup(), POPUP_AUTO_CLOSE_MS);
+        }
     }
 }
+
+function closePopup() {
+    dom.popup.container.classList.toggle("show");
+    setTimeout(() => {
+        dom.popup.container.classList.remove("success");
+        dom.popup.container.classList.remove("error");
+        hideElement(dom.popup.iconSuccess);
+        hideElement(dom.popup.iconError);
+    }, POPUP_TRANSITION_MS);
+}
+//#endregion
+
+//#region Messaging
+function getDataWithConfig(_config) {
+    if (state.isProcessing) { return; }
+    state.isProcessing = true;
+    vscode.postMessage({ command: "getData", text: JSON.stringify(_config) });
+}
+
+function getData() {
+    if (state.isProcessing) { return; }
+    state.isProcessing = true;
+    vscode.postMessage({ command: "getData" });
+}
+
+function getDataTableWithConfig() {
+    getDataWithConfig({
+        currentPage: Number(dom.pagination.currentPage.value),
+        recordsPerPage: Number(dom.pagination.recordsPerPage.value),
+        totalPage: Number(dom.pagination.totalPage.textContent)
+    });
+}
+
+const messageHandlers = {
+    setData: (msg) => setData(msg.data),
+    setHeader: (msg) => setDataTableHeader(msg.data),
+    appendRows: (msg) => appendRows(msg.data),
+    fetchComplete: () => onFetchComplete(),
+    showError: (msg) => {
+        dom.datatable.name.textContent = msg.varName || "";
+        showError(msg.message || "An unknown error occurred.");
+        state.isProcessing = false;
+    }
+};
+
+window.addEventListener("message", (event) => {
+    const handler = messageHandlers[event.data.command];
+    if (handler) { handler(event.data); }
+});
+//#endregion
+
+//#region Event Listeners
+dom.buttons.wordWrap.addEventListener("click", () => wrapText());
+dom.buttons.copy.addEventListener("click", () => copyToClipBoard());
+dom.buttons.refresh.addEventListener("click", () => refreshDataAction());
+dom.buttons.export.addEventListener("click", () => exportToCSV());
+dom.popup.iconClose.addEventListener("click", () => { clearTimeout(state.popupTimeout); closePopup(); });
+
+dom.pagination.currentPage.addEventListener("keyup", (event) => {
+    if (state.isProcessing) { dom.pagination.currentPage.value = state.oldCurrentPage; return; }
+    if (event.key === "Enter") {
+        const val = Number(dom.pagination.currentPage.value);
+        const total = Number(dom.pagination.totalPage.textContent);
+        if (val % 1 !== 0) {
+            showNotification("Current page can not be a decimal value.", "error", true);
+            dom.pagination.currentPage.value = state.oldCurrentPage;
+        } else if (val < 1) {
+            showNotification("Current page can not be less than 1.", "error", true);
+            dom.pagination.currentPage.value = state.oldCurrentPage;
+        } else if (val > total) {
+            showNotification("Current page can not be more than total pages.", "error", true);
+            dom.pagination.currentPage.value = state.oldCurrentPage;
+        } else {
+            getDataTableWithConfig();
+        }
+    }
+});
+
+dom.pagination.recordsPerPage.addEventListener("change", () => {
+    if (!state.isProcessing) { getDataTableWithConfig(); }
+});
+
+dom.pagination.firstBtn.addEventListener("click", () => {
+    if (state.isProcessing || Number(dom.pagination.currentPage.value) <= 1) { return; }
+    dom.pagination.currentPage.value = 1;
+    state.oldCurrentPage = dom.pagination.currentPage.value;
+    getDataTableWithConfig();
+    togglePreviousOrNextPageBtn();
+});
+
+dom.pagination.prevBtn.addEventListener("click", () => {
+    if (state.isProcessing || Number(dom.pagination.currentPage.value) <= 1) { return; }
+    dom.pagination.currentPage.value = Number(dom.pagination.currentPage.value) - 1;
+    state.oldCurrentPage = dom.pagination.currentPage.value;
+    getDataTableWithConfig();
+    togglePreviousOrNextPageBtn();
+});
+
+dom.pagination.nextBtn.addEventListener("click", () => {
+    if (state.isProcessing || Number(dom.pagination.currentPage.value) >= Number(dom.pagination.totalPage.textContent)) { return; }
+    dom.pagination.currentPage.value = Number(dom.pagination.currentPage.value) + 1;
+    state.oldCurrentPage = dom.pagination.currentPage.value;
+    getDataTableWithConfig();
+    togglePreviousOrNextPageBtn();
+});
+
+dom.pagination.lastBtn.addEventListener("click", () => {
+    if (state.isProcessing || Number(dom.pagination.currentPage.value) >= Number(dom.pagination.totalPage.textContent)) { return; }
+    dom.pagination.currentPage.value = Number(dom.pagination.totalPage.textContent);
+    state.oldCurrentPage = dom.pagination.currentPage.value;
+    getDataTableWithConfig();
+    togglePreviousOrNextPageBtn();
+});
+//#endregion
+
+// Initialize
+getData();

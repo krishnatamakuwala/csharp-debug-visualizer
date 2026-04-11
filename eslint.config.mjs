@@ -3,6 +3,8 @@ import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
 
 export default defineConfig([globalIgnores(["**/out", "**/dist", "**/*.d.ts"]), {
+    files: ["**/*.ts"],
+
     plugins: {
         "@typescript-eslint": typescriptEslint,
     },
