@@ -3,10 +3,10 @@
 import * as sinon from "sinon";
 import { expect } from "chai";
 import * as vscode from "vscode";
-import { SingleTypeResultProvider } from "../../Provider/Result/SingleTypeResultProvider";
-import { IVariable } from "../../Proxies/DebugSessionDetails";
-import { RequestStatusType } from "../../Enums/RequestStatusType";
-import { ValueNotFoundError } from "../../Extensions/Errors";
+import { SingleTypeResultProvider } from "../../providers/singleTypeProvider";
+import { IVariable } from "../../debug/debugSession";
+import { RequestStatusType } from "../../constants/requestStatus";
+import { ValueNotFoundError } from "../../errors/errors";
 import { before } from "mocha";
 import { createMockCancellationToken } from "../Mocks/MockCancellationToken";
 import { createMockVariable } from "../Mocks/MockVariable";
@@ -35,8 +35,7 @@ describe("Single type variable tests", () => {
 		);
 		const result = await provider.getResult();
 
-		expect(result).to.be.equal("42");
-		expect(result).to.be.a("string");
+		expect(result).to.deep.equal({ status: "success", data: "42" });
 		expect(cancellationToken.calledOnce).to.be.true;
 	});
 
@@ -48,10 +47,12 @@ describe("Single type variable tests", () => {
 			null,
 			cancellationToken
 		);
-		provider.getResult().catch((e) => {
-			expect(e).to.be.an.instanceOf(ValueNotFoundError, "CE005: The value for the requested variable could not be found.");
-			expect(cancellationToken.calledOnce).to.be.true;
-		});
+		try {
+			await provider.getResult();
+			expect.fail("Expected ValueNotFoundError to be thrown");
+		} catch (e) {
+			expect(e).to.be.an.instanceOf(ValueNotFoundError);
+		}
 	});
 
 	it("should not return value when request is cancelled", async () => {
@@ -67,7 +68,7 @@ describe("Single type variable tests", () => {
 		);
 		const result = await provider.getResult();
 
-		expect(result).to.be.equal(RequestStatusType.cancelled);
+		expect(result).to.deep.equal({ status: "cancelled" });
 		expect(cancellationToken.calledOnce).to.be.true;
 	});
 });

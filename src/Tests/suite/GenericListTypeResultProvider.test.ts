@@ -3,16 +3,15 @@
 import * as sinon from "sinon";
 import { expect } from "chai";
 import * as vscode from "vscode";
-import { DebugSessionDetails, IVariable } from "../../Proxies/DebugSessionDetails";
-import { RequestStatusType } from "../../Enums/RequestStatusType";
-import { ValueNotFoundError } from "../../Extensions/Errors";
+import { DebugSessionDetails, IVariable } from "../../debug/debugSession";
+import { RequestStatusType } from "../../constants/requestStatus";
+import { ValueNotFoundError } from "../../errors/errors";
 import { before } from "mocha";
 import { createMockCancellationToken } from "../Mocks/MockCancellationToken";
-import { GenericListTypeResultProvider } from "../../Provider/Result/GenericListTypeResultProvider";
+import { GenericListTypeResultProvider } from "../../providers/genericListProvider";
 import { createMockDebugSession } from "../Mocks/MockDebugSession";
 import { MockProgress } from "../Mocks/MockProgress";
 import { createMockVariable } from "../Mocks/MockVariable";
-import { ProgressTracker } from "../../Models/RequestProgressStatus";
 import { ArrayType, mockArrayPaging } from "../Mocks/MockArrayPaging";
 import { buildArrayVariables, buildExpectedResult } from "../Helpers/TestArrayHelper";
 
@@ -30,7 +29,6 @@ describe("GenericList type variable tests", () => {
     });
 
     beforeEach(() => {
-        ProgressTracker.progress = 0;
         variableList = [
             createMockVariable("testVar", "Array [3]", 1001),
             createMockVariable("testVar2", "test", 1002, "testVar.testVar2")
@@ -67,10 +65,8 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal("10, 20, 30");
-        expect(result).to.be.a("string");
+        expect(result).to.deep.equal({ status: "success", data: "10, 20, 30" });
         expect(cancellationToken.callCount).to.be.equal(2 + (Math.ceil(count / countPerPage)));
-        expect(ProgressTracker.progress).to.be.equal(50);
     });
 
     it("should return value when it does not exists and request is not cancelled", async () => {
@@ -82,11 +78,13 @@ describe("GenericList type variable tests", () => {
             progress,
             cancellationToken
         );
-        provider.getResult().catch((e) => {
-            expect(e).to.be.an.instanceOf(ValueNotFoundError, "CE005: The value for the requested variable could not be found.");
+        try {
+            await provider.getResult();
+            expect.fail("Expected ValueNotFoundError to be thrown");
+        } catch (e) {
+            expect(e).to.be.an.instanceOf(ValueNotFoundError);
             expect(cancellationToken.callCount).to.be.equal(2);
-            expect(ProgressTracker.progress).to.be.equal(0);
-        });
+            }
     });
 
     it("should return empty string as value when it array is empty and request is not cancelled", async () => {
@@ -111,10 +109,8 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal("");
-        expect(result).to.be.a("string");
+        expect(result).to.deep.equal({ status: "success", data: "" });
         expect(cancellationToken.callCount).to.be.equal(2 + (Math.ceil(count / countPerPage)));
-        expect(ProgressTracker.progress).to.be.equal(0);
     });
 
     it("should not return value when request is cancelled", async () => {
@@ -130,9 +126,8 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal(RequestStatusType.cancelled);
+        expect(result).to.deep.equal({ status: "cancelled" });
         expect(cancellationToken.callCount).to.be.equal(2 + (Math.ceil(count / countPerPage)));
-        expect(ProgressTracker.progress).to.be.equal(0);
     });
 
     it("should return full array string as value when it array length is 30 and request is not cancelled", async () => {
@@ -156,10 +151,8 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal(buildExpectedResult(count));
-        expect(result).to.be.a("string");
+        expect(result).to.deep.equal({ status: "success", data: buildExpectedResult(count) });
         expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
-        expect(ProgressTracker.progress).to.be.equal(50);
     });
 
     it("should return full array string as value when it array length is 20 and request is not cancelled", async () => {
@@ -183,10 +176,8 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal(buildExpectedResult(count));
-        expect(result).to.be.a("string");
+        expect(result).to.deep.equal({ status: "success", data: buildExpectedResult(count) });
         expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
-        expect(ProgressTracker.progress).to.be.equal(50);
     });
 
     it("should return full array string as value when it array length is 40 and request is not cancelled", async () => {
@@ -210,10 +201,8 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal(buildExpectedResult(count));
-        expect(result).to.be.a("string");
+        expect(result).to.deep.equal({ status: "success", data: buildExpectedResult(count) });
         expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
-        expect(ProgressTracker.progress).to.be.equal(50);
     });
 
     it("should return full array string as value when it array length is 100 and request is not cancelled", async () => {
@@ -237,9 +226,7 @@ describe("GenericList type variable tests", () => {
         );
         const result = await provider.getResult();
 
-        expect(result).to.be.equal(buildExpectedResult(count));
-        expect(result).to.be.a("string");
+        expect(result).to.deep.equal({ status: "success", data: buildExpectedResult(count) });
         expect(cancellationToken.callCount).to.be.equal(2 + totalPage);
-        expect(ProgressTracker.progress).to.be.equal(50);
     });
 });

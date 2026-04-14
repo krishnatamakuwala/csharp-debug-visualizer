@@ -1,5 +1,5 @@
 import { MessageOptions, window } from "vscode";
-import { MessageType } from "../Enums/MessageType";
+import { MessageType } from "../constants/messages";
 
 export class NotificationManager {
 

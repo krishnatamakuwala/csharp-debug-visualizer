@@ -1,4 +1,4 @@
-import { RequestStatusType } from "../Enums/RequestStatusType";
+import { RequestStatusType } from "../constants/requestStatus";
 
 /**
  * Maintain request status based on Request Status Type
@@ -6,10 +6,15 @@ import { RequestStatusType } from "../Enums/RequestStatusType";
 class RequestStatus {
     private static _status: RequestStatusType;
 
+    private static readonly terminalStatuses = [RequestStatusType.completed, RequestStatusType.failed, RequestStatusType.cancelled];
+
     public static get status(): RequestStatusType {
         return this._status;
     }
     public static set status(value: RequestStatusType) {
+        if (this._status !== undefined && this.terminalStatuses.includes(this._status) && value !== RequestStatusType.started) {
+            return;
+        }
         this._status = value;
     }
 }

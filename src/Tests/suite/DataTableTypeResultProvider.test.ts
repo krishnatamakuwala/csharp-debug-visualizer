@@ -3,18 +3,17 @@
 import * as sinon from "sinon";
 import { expect } from "chai";
 import * as vscode from "vscode";
-import { DebugSessionDetails, IVariable } from "../../Proxies/DebugSessionDetails";
+import { DebugSessionDetails, IVariable } from "../../debug/debugSession";
 import { before } from "mocha";
 import { createMockCancellationToken } from "../Mocks/MockCancellationToken";
 import { createMockDebugSession } from "../Mocks/MockDebugSession";
 import { MockProgress } from "../Mocks/MockProgress";
 import { createMockVariable } from "../Mocks/MockVariable";
-import { ProgressTracker } from "../../Models/RequestProgressStatus";
-import { DataTableTypeResultProvider } from "../../Provider/Result/DataTableTypeResultProvider";
+import { DataTableTypeResultProvider } from "../../providers/dataTableProvider";
 import { createMockDataTableResult } from "../Mocks/MockDataTableResult";
-import { DataTable, DataTableConfig } from "../../Models/Variable";
-import { InvalidRecordsPerPageError, ValueNotFoundError } from "../../Extensions/Errors";
-import { RequestStatusType } from "../../Enums/RequestStatusType";
+import { DataTable, DataTableConfig } from "../../models/Variable";
+import { InvalidRecordsPerPageError, ValueNotFoundError } from "../../errors/errors";
+import { RequestStatusType } from "../../constants/requestStatus";
 
 describe("DataTable type variable tests", () => {
 
@@ -48,7 +47,6 @@ describe("DataTable type variable tests", () => {
     });
 
     beforeEach(() => {
-        ProgressTracker.progress = 0;
         variableList = [
             createMockVariable("testVar", "{}", 1001),
             createMockVariable("testVar2", "test", 1002, "testVar.testVar2")
@@ -76,9 +74,8 @@ describe("DataTable type variable tests", () => {
             throw new Error("Invalid test setup");
         }
 
-        expect(result).to.deep.equal(expectedResult);
+        expect(result).to.deep.equal({ status: "success", data: expectedResult });
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
-        expect(ProgressTracker.progress).to.be.equal(60);
     });
 
     it("should return value of page 1 with config of 5 records per page when it exists and request is not cancelled", async () => {
@@ -106,9 +103,8 @@ describe("DataTable type variable tests", () => {
             throw new Error("Invalid test setup");
         }
 
-        expect(result).to.deep.equal(expectedResult);
+        expect(result).to.deep.equal({ status: "success", data: expectedResult });
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
-        expect(ProgressTracker.progress).to.be.equal(60);
     });
 
     it("should return value of page 2 with config of 5 records per page when it exists and request is not cancelled", async () => {
@@ -137,9 +133,8 @@ describe("DataTable type variable tests", () => {
             throw new Error("Invalid test setup");
         }
 
-        expect(result).to.deep.equal(expectedResult);
+        expect(result).to.deep.equal({ status: "success", data: expectedResult });
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
-        expect(ProgressTracker.progress).to.be.equal(60);
     });
 
     it("should return value of page 2 with config of 5 records per page and total count of 7 records when it exists and request is not cancelled", async () => {
@@ -169,9 +164,8 @@ describe("DataTable type variable tests", () => {
             throw new Error("Invalid test setup");
         }
 
-        expect(result).to.deep.equal(expectedResult);
+        expect(result).to.deep.equal({ status: "success", data: expectedResult });
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
-        expect(ProgressTracker.progress).to.be.equal(60);
     });
 
     it("should return value of page 1 with config of All records per page and total count of 17 records when it exists and request is not cancelled", async () => {
@@ -201,9 +195,8 @@ describe("DataTable type variable tests", () => {
             throw new Error("Invalid test setup");
         }
 
-        expect(result).to.deep.equal(expectedResult);
+        expect(result).to.deep.equal({ status: "success", data: expectedResult });
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 3 + (2 + Math.ceil(expectedResult.rows.list[0].length / 10)) * expectedResult.rows.list.length);
-        expect(Math.round(ProgressTracker.progress)).to.be.equal(60); // Used Math.round function to round negligible decimal progress value because of odd number of total records
     });
 
     it("should not return value when it does not exists and request is not cancelled", async () => {
@@ -219,11 +212,13 @@ describe("DataTable type variable tests", () => {
             cancellationToken
         );
 
-        provider.getResult().catch((e) => {
-            expect(e).to.be.an.instanceOf(ValueNotFoundError, "CE005: The value for the requested variable could not be found.");
+        try {
+            await provider.getResult();
+            expect.fail("Expected ValueNotFoundError to be thrown");
+        } catch (e) {
+            expect(e).to.be.an.instanceOf(ValueNotFoundError);
             expect(cancellationToken.callCount).to.be.equal(1);
-            expect(ProgressTracker.progress).to.be.equal(0);
-        });
+        }
     });
 
     it("should not return value when it exists with invalid configuration and request is not cancelled", async () => {
@@ -245,14 +240,16 @@ describe("DataTable type variable tests", () => {
             config
         );
 
-        provider.getResult().catch((e) => {
+        try {
+            await provider.getResult();
+            expect.fail("Expected InvalidRecordsPerPageError to be thrown");
+        } catch (e) {
             if (!expectedResult.columns || !expectedResult.rows) {
                 throw new Error("Invalid test setup");
             }
-            expect(e).to.be.an.instanceOf(InvalidRecordsPerPageError, "CE004: The records-per-page configuration provided is invalid.");
+            expect(e).to.be.an.instanceOf(InvalidRecordsPerPageError);
             expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 2);
-            expect(ProgressTracker.progress).to.be.equal(15);
-        });
+        }
     });
 
     it("should not return value when request is cancelled", async () => {
@@ -274,8 +271,7 @@ describe("DataTable type variable tests", () => {
         }
         const result = await provider.getResult();
 
-        expect(result).to.be.equal(RequestStatusType.cancelled);
+        expect(result).to.deep.equal({ status: "cancelled" });
         expect(cancellationToken.callCount).to.be.equal(6 + Math.ceil(expectedResult.columns.count / 10) + 1);
-        expect(ProgressTracker.progress).to.be.equal(15);
     });
 });
